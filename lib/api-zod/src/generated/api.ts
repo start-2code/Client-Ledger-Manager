@@ -579,3 +579,55 @@ export const GetDashboardRecentClientsResponseItem = zod.object({
 export const GetDashboardRecentClientsResponse = zod.array(
   GetDashboardRecentClientsResponseItem,
 );
+
+/**
+ * @summary List dropdown options, optionally filtered by category
+ */
+export const ListDropdownOptionsQueryParams = zod.object({
+  category: zod.coerce.string().optional().describe("Filter by category key"),
+});
+
+export const ListDropdownOptionsResponse = zod.object({
+  options: zod.array(
+    zod.object({
+      id: zod.number(),
+      category: zod.string(),
+      value: zod.string(),
+      sortOrder: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Create a dropdown option
+ */
+export const CreateDropdownOptionBody = zod.object({
+  category: zod.string(),
+  value: zod.string(),
+  sortOrder: zod.number().optional(),
+});
+
+/**
+ * @summary Update a dropdown option value
+ */
+export const UpdateDropdownOptionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDropdownOptionBody = zod.object({
+  value: zod.string(),
+});
+
+export const UpdateDropdownOptionResponse = zod.object({
+  id: zod.number(),
+  category: zod.string(),
+  value: zod.string(),
+  sortOrder: zod.number(),
+});
+
+/**
+ * @summary Delete a dropdown option
+ */
+export const DeleteDropdownOptionParams = zod.object({
+  id: zod.coerce.number(),
+});

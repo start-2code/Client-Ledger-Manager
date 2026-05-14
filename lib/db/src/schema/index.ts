@@ -3,3 +3,4 @@ export * from "./tasks";
 export * from "./financial-info";
 export * from "./tax-references";
 export * from "./tax-returns";
+export * from "./dropdown-options";

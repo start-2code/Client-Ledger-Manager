@@ -54,7 +54,7 @@ router.patch("/:clientId", async (req, res) => {
     }
     const [record] = await db
       .update(financialInfoTable)
-      .set(parsed.data)
+      .set(parsed.data as any)
       .where(eq(financialInfoTable.clientId, clientId))
       .returning();
     if (!record) {

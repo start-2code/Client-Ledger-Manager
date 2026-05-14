@@ -21,6 +21,8 @@ tags:
     description: SA Tax return work status
   - name: dashboard
     description: Dashboard aggregates
+  - name: admin
+    description: Admin operations for dropdown option management
 paths:
   /healthz:
     get:
@@ -513,6 +515,80 @@ paths:
                 items:
                   $ref: "#/components/schemas/Client"
 
+  /admin/dropdown-options:
+    get:
+      operationId: listDropdownOptions
+      tags: [admin]
+      summary: List dropdown options, optionally filtered by category
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filter by category key
+      responses:
+        "200":
+          description: List of dropdown options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DropdownOptionList"
+    post:
+      operationId: createDropdownOption
+      tags: [admin]
+      summary: Create a dropdown option
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DropdownOptionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DropdownOption"
+
+  /admin/dropdown-options/{id}:
+    put:
+      operationId: updateDropdownOption
+      tags: [admin]
+      summary: Update a dropdown option value
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DropdownOptionUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DropdownOption"
+    delete:
+      operationId: deleteDropdownOption
+      tags: [admin]
+      summary: Delete a dropdown option
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
 components:
   schemas:
     HealthStatus:
@@ -891,3 +967,43 @@ components:
           type: string
         count:
           type: integer
+
+    DropdownOption:
+      type: object
+      required: [id, category, value, sortOrder]
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+        value:
+          type: string
+        sortOrder:
+          type: integer
+
+    DropdownOptionList:
+      type: object
+      required: [options]
+      properties:
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/DropdownOption"
+
+    DropdownOptionInput:
+      type: object
+      required: [category, value]
+      properties:
+        category:
+          type: string
+        value:
+          type: string
+        sortOrder:
+          type: integer
+
+    DropdownOptionUpdate:
+      type: object
+      required: [value]
+      properties:
+        value:
+          type: string

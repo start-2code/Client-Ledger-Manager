@@ -15,6 +15,7 @@ import {
   useUpdateClient,
   getListClientsQueryKey,
   getGetClientQueryKey,
+  useListDropdownOptions,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -64,6 +65,8 @@ const empty = {
 export function ClientFormDialog({ open, onOpenChange, client }: ClientFormDialogProps) {
   const queryClient = useQueryClient();
   const isEdit = !!client;
+  const { data: clientTypeData } = useListDropdownOptions({ category: "client_type" });
+  const clientTypeOptions = clientTypeData?.options.map((o) => o.value) ?? CLIENT_TYPES;
 
   const [form, setForm] = useState(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -181,7 +184,7 @@ export function ClientFormDialog({ open, onOpenChange, client }: ClientFormDialo
                 id="type"
                 value={form.type}
                 onChange={(v) => set("type", v)}
-                options={CLIENT_TYPES}
+                options={clientTypeOptions}
                 placeholder="Select or type..."
               />
               {errors.type && <p className="text-xs text-destructive">{errors.type}</p>}

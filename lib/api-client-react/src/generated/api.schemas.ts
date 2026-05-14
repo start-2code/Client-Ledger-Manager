@@ -276,6 +276,27 @@ export interface DashboardSummary {
   vatRegisteredCount?: number;
 }
 
+export interface DropdownOption {
+  id: number;
+  category: string;
+  value: string;
+  sortOrder: number;
+}
+
+export interface DropdownOptionList {
+  options: DropdownOption[];
+}
+
+export interface DropdownOptionInput {
+  category: string;
+  value: string;
+  sortOrder?: number;
+}
+
+export interface DropdownOptionUpdate {
+  value: string;
+}
+
 export type ListClientsParams = {
   search?: string;
   type?: string;
@@ -320,4 +341,11 @@ export type GetDashboardOverdueTasksParams = {
 
 export type GetDashboardRecentClientsParams = {
   limit?: number;
+};
+
+export type ListDropdownOptionsParams = {
+  /**
+   * Filter by category key
+   */
+  category?: string;
 };

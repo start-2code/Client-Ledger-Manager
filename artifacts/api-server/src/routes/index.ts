@@ -6,6 +6,7 @@ import financialInfoRouter from "./financial-info";
 import taxReferencesRouter from "./tax-references";
 import taxReturnsRouter from "./tax-returns";
 import dashboardRouter from "./dashboard";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use("/financial-info", financialInfoRouter);
 router.use("/tax-references", taxReferencesRouter);
 router.use("/tax-returns", taxReturnsRouter);
 router.use("/dashboard", dashboardRouter);
+router.use("/admin", adminRouter);
 
 export default router;

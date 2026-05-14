@@ -15,6 +15,7 @@ import {
   useUpdateTask,
   getListTasksQueryKey,
   getGetClientQueryKey,
+  useListDropdownOptions,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -66,6 +67,10 @@ export function TaskFormDialog({
 }: TaskFormDialogProps) {
   const queryClient = useQueryClient();
   const isEdit = !!task;
+  const { data: taskStatusData } = useListDropdownOptions({ category: "task_status" });
+  const taskStatusOptions = taskStatusData?.options.map((o) => o.value) ?? TASK_STATUSES;
+  const { data: activityTypeData } = useListDropdownOptions({ category: "activity_type" });
+  const activityTypeOptions = activityTypeData?.options.map((o) => o.value) ?? ACTIVITY_TYPES;
 
   const [form, setForm] = useState(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -188,7 +193,7 @@ export function TaskFormDialog({
                 id="taskStatus"
                 value={form.taskStatus}
                 onChange={(v) => set("taskStatus", v)}
-                options={TASK_STATUSES}
+                options={taskStatusOptions}
                 placeholder="Select status..."
               />
               {errors.taskStatus && <p className="text-xs text-destructive">{errors.taskStatus}</p>}
@@ -199,7 +204,7 @@ export function TaskFormDialog({
                 id="activityType"
                 value={form.activityType}
                 onChange={(v) => set("activityType", v)}
-                options={ACTIVITY_TYPES}
+                options={activityTypeOptions}
                 placeholder="Select or type..."
               />
             </div>

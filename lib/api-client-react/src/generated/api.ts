@@ -23,12 +23,17 @@ import type {
   ClientList,
   ClientUpdate,
   DashboardSummary,
+  DropdownOption,
+  DropdownOptionInput,
+  DropdownOptionList,
+  DropdownOptionUpdate,
   FinancialInfo,
   FinancialInfoUpdate,
   GetDashboardOverdueTasksParams,
   GetDashboardRecentClientsParams,
   HealthStatus,
   ListClientsParams,
+  ListDropdownOptionsParams,
   ListFinancialInfoParams,
   ListTasksParams,
   ListTaxReferencesParams,
@@ -1997,3 +2002,360 @@ export function useGetDashboardRecentClients<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List dropdown options, optionally filtered by category
+ */
+export const getListDropdownOptionsUrl = (
+  params?: ListDropdownOptionsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/dropdown-options?${stringifiedParams}`
+    : `/api/admin/dropdown-options`;
+};
+
+export const listDropdownOptions = async (
+  params?: ListDropdownOptionsParams,
+  options?: RequestInit,
+): Promise<DropdownOptionList> => {
+  return customFetch<DropdownOptionList>(getListDropdownOptionsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDropdownOptionsQueryKey = (
+  params?: ListDropdownOptionsParams,
+) => {
+  return [`/api/admin/dropdown-options`, ...(params ? [params] : [])] as const;
+};
+
+export const getListDropdownOptionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDropdownOptions>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListDropdownOptionsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listDropdownOptions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListDropdownOptionsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listDropdownOptions>>
+  > = ({ signal }) =>
+    listDropdownOptions(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listDropdownOptions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListDropdownOptionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDropdownOptions>>
+>;
+export type ListDropdownOptionsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List dropdown options, optionally filtered by category
+ */
+
+export function useListDropdownOptions<
+  TData = Awaited<ReturnType<typeof listDropdownOptions>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListDropdownOptionsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listDropdownOptions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListDropdownOptionsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a dropdown option
+ */
+export const getCreateDropdownOptionUrl = () => {
+  return `/api/admin/dropdown-options`;
+};
+
+export const createDropdownOption = async (
+  dropdownOptionInput: DropdownOptionInput,
+  options?: RequestInit,
+): Promise<DropdownOption> => {
+  return customFetch<DropdownOption>(getCreateDropdownOptionUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(dropdownOptionInput),
+  });
+};
+
+export const getCreateDropdownOptionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDropdownOption>>,
+    TError,
+    { data: BodyType<DropdownOptionInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createDropdownOption>>,
+  TError,
+  { data: BodyType<DropdownOptionInput> },
+  TContext
+> => {
+  const mutationKey = ["createDropdownOption"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createDropdownOption>>,
+    { data: BodyType<DropdownOptionInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createDropdownOption(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateDropdownOptionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createDropdownOption>>
+>;
+export type CreateDropdownOptionMutationBody = BodyType<DropdownOptionInput>;
+export type CreateDropdownOptionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a dropdown option
+ */
+export const useCreateDropdownOption = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDropdownOption>>,
+    TError,
+    { data: BodyType<DropdownOptionInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createDropdownOption>>,
+  TError,
+  { data: BodyType<DropdownOptionInput> },
+  TContext
+> => {
+  return useMutation(getCreateDropdownOptionMutationOptions(options));
+};
+
+/**
+ * @summary Update a dropdown option value
+ */
+export const getUpdateDropdownOptionUrl = (id: number) => {
+  return `/api/admin/dropdown-options/${id}`;
+};
+
+export const updateDropdownOption = async (
+  id: number,
+  dropdownOptionUpdate: DropdownOptionUpdate,
+  options?: RequestInit,
+): Promise<DropdownOption> => {
+  return customFetch<DropdownOption>(getUpdateDropdownOptionUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(dropdownOptionUpdate),
+  });
+};
+
+export const getUpdateDropdownOptionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDropdownOption>>,
+    TError,
+    { id: number; data: BodyType<DropdownOptionUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDropdownOption>>,
+  TError,
+  { id: number; data: BodyType<DropdownOptionUpdate> },
+  TContext
+> => {
+  const mutationKey = ["updateDropdownOption"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDropdownOption>>,
+    { id: number; data: BodyType<DropdownOptionUpdate> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateDropdownOption(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDropdownOptionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDropdownOption>>
+>;
+export type UpdateDropdownOptionMutationBody = BodyType<DropdownOptionUpdate>;
+export type UpdateDropdownOptionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a dropdown option value
+ */
+export const useUpdateDropdownOption = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDropdownOption>>,
+    TError,
+    { id: number; data: BodyType<DropdownOptionUpdate> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDropdownOption>>,
+  TError,
+  { id: number; data: BodyType<DropdownOptionUpdate> },
+  TContext
+> => {
+  return useMutation(getUpdateDropdownOptionMutationOptions(options));
+};
+
+/**
+ * @summary Delete a dropdown option
+ */
+export const getDeleteDropdownOptionUrl = (id: number) => {
+  return `/api/admin/dropdown-options/${id}`;
+};
+
+export const deleteDropdownOption = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteDropdownOptionUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDropdownOptionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDropdownOption>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDropdownOption>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteDropdownOption"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDropdownOption>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteDropdownOption(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDropdownOptionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDropdownOption>>
+>;
+
+export type DeleteDropdownOptionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a dropdown option
+ */
+export const useDeleteDropdownOption = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDropdownOption>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDropdownOption>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteDropdownOptionMutationOptions(options));
+};

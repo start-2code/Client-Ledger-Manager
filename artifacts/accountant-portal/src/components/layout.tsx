@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { Building2, LayoutDashboard, Users, CheckSquare, FileText, Menu } from "lucide-react";
+import { Building2, LayoutDashboard, Users, CheckSquare, FileText, Menu, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/tax-returns", label: "Tax Returns", icon: FileText },
+  { href: "/admin", label: "Admin", icon: Settings2 },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

@@ -13,6 +13,7 @@ import { CreatableCombobox } from "@/components/creatable-combobox";
 import {
   useUpdateTaxReference,
   getGetClientQueryKey,
+  useListDropdownOptions,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -64,6 +65,12 @@ export function TaxReferenceEditDialog({
 }: TaxReferenceEditDialogProps) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
+  const { data: amlData } = useListDropdownOptions({ category: "aml_status" });
+  const amlOptions = amlData?.options.map((o) => o.value) ?? AML_STATUSES;
+  const { data: engagementData } = useListDropdownOptions({ category: "engagement_status" });
+  const engagementOptions = engagementData?.options.map((o) => o.value) ?? ENGAGEMENT_STATUSES;
+  const { data: accountsData } = useListDropdownOptions({ category: "accounts_status" });
+  const accountsOptions = accountsData?.options.map((o) => o.value) ?? ACCOUNTS_STATUSES;
 
   useEffect(() => {
     if (open) {
@@ -186,7 +193,7 @@ export function TaxReferenceEditDialog({
                   id="amlStatus"
                   value={form.amlStatus}
                   onChange={(v) => set("amlStatus", v)}
-                  options={AML_STATUSES}
+                  options={amlOptions}
                   placeholder="Select or type..."
                 />
               </div>
@@ -196,7 +203,7 @@ export function TaxReferenceEditDialog({
                   id="engagementStatus"
                   value={form.engagementStatus}
                   onChange={(v) => set("engagementStatus", v)}
-                  options={ENGAGEMENT_STATUSES}
+                  options={engagementOptions}
                   placeholder="Select or type..."
                 />
               </div>
@@ -206,7 +213,7 @@ export function TaxReferenceEditDialog({
                   id="latestAccountsStatus"
                   value={form.latestAccountsStatus}
                   onChange={(v) => set("latestAccountsStatus", v)}
-                  options={ACCOUNTS_STATUSES}
+                  options={accountsOptions}
                   placeholder="Select or type..."
                 />
               </div>

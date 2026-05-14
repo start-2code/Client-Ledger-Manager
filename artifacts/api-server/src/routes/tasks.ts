@@ -68,7 +68,7 @@ router.post("/", async (req, res) => {
       res.status(400).json({ error: "Invalid request body", details: parsed.error.issues });
       return;
     }
-    const [task] = await db.insert(tasksTable).values(parsed.data).returning();
+    const [task] = await db.insert(tasksTable).values(parsed.data as any).returning();
     res.status(201).json(withIsOverdue(task));
   } catch (err) {
     req.log.error({ err }, "Failed to create task");
@@ -99,7 +99,7 @@ router.patch("/:id", async (req, res) => {
       res.status(400).json({ error: "Invalid request body", details: parsed.error.issues });
       return;
     }
-    const [task] = await db.update(tasksTable).set(parsed.data).where(eq(tasksTable.id, id)).returning();
+    const [task] = await db.update(tasksTable).set(parsed.data as any).where(eq(tasksTable.id, id)).returning();
     if (!task) {
       res.status(404).json({ error: "Task not found" });
       return;

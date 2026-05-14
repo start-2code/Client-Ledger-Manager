@@ -10,6 +10,7 @@ import ClientsList from "@/pages/clients-list";
 import ClientDetail from "@/pages/client-detail";
 import TasksList from "@/pages/tasks-list";
 import TaxReturnsList from "@/pages/tax-returns-list";
+import Admin from "@/pages/admin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,7 @@ function Router() {
         <Route path="/clients/:id" component={ClientDetail} />
         <Route path="/tasks" component={TasksList} />
         <Route path="/tax-returns" component={TaxReturnsList} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

@@ -9,13 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CreatableCombobox } from "@/components/creatable-combobox";
 import {
   useCreateClient,
   useUpdateClient,
@@ -183,18 +177,13 @@ export function ClientFormDialog({ open, onOpenChange, client }: ClientFormDialo
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="type">Client Type *</Label>
-              <Select value={form.type} onValueChange={(v) => set("type", v)}>
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {CLIENT_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CreatableCombobox
+                id="type"
+                value={form.type}
+                onChange={(v) => set("type", v)}
+                options={CLIENT_TYPES}
+                placeholder="Select or type..."
+              />
               {errors.type && <p className="text-xs text-destructive">{errors.type}</p>}
             </div>
           </div>

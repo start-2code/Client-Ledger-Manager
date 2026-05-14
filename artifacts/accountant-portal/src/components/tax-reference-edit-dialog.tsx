@@ -9,13 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CreatableCombobox } from "@/components/creatable-combobox";
 import {
   useUpdateTaxReference,
   getGetClientQueryKey,
@@ -188,33 +182,33 @@ export function TaxReferenceEditDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="amlStatus">AML Status</Label>
-                <Select value={form.amlStatus || "__none__"} onValueChange={(v) => set("amlStatus", v === "__none__" ? "" : v)}>
-                  <SelectTrigger id="amlStatus"><SelectValue placeholder="Select..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Not Set</SelectItem>
-                    {AML_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <CreatableCombobox
+                  id="amlStatus"
+                  value={form.amlStatus}
+                  onChange={(v) => set("amlStatus", v)}
+                  options={AML_STATUSES}
+                  placeholder="Select or type..."
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="engagementStatus">Engagement Status</Label>
-                <Select value={form.engagementStatus || "__none__"} onValueChange={(v) => set("engagementStatus", v === "__none__" ? "" : v)}>
-                  <SelectTrigger id="engagementStatus"><SelectValue placeholder="Select..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Not Set</SelectItem>
-                    {ENGAGEMENT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <CreatableCombobox
+                  id="engagementStatus"
+                  value={form.engagementStatus}
+                  onChange={(v) => set("engagementStatus", v)}
+                  options={ENGAGEMENT_STATUSES}
+                  placeholder="Select or type..."
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="latestAccountsStatus">Latest Accounts Status</Label>
-                <Select value={form.latestAccountsStatus || "__none__"} onValueChange={(v) => set("latestAccountsStatus", v === "__none__" ? "" : v)}>
-                  <SelectTrigger id="latestAccountsStatus"><SelectValue placeholder="Select..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Not Set</SelectItem>
-                    {ACCOUNTS_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <CreatableCombobox
+                  id="latestAccountsStatus"
+                  value={form.latestAccountsStatus}
+                  onChange={(v) => set("latestAccountsStatus", v)}
+                  options={ACCOUNTS_STATUSES}
+                  placeholder="Select or type..."
+                />
               </div>
             </div>
           </div>

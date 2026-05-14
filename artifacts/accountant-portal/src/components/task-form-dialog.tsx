@@ -9,13 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CreatableCombobox } from "@/components/creatable-combobox";
 import {
   useCreateTask,
   useUpdateTask,
@@ -190,38 +184,24 @@ export function TaskFormDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="taskStatus">Status *</Label>
-              <Select value={form.taskStatus} onValueChange={(v) => set("taskStatus", v)}>
-                <SelectTrigger id="taskStatus">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TASK_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CreatableCombobox
+                id="taskStatus"
+                value={form.taskStatus}
+                onChange={(v) => set("taskStatus", v)}
+                options={TASK_STATUSES}
+                placeholder="Select status..."
+              />
               {errors.taskStatus && <p className="text-xs text-destructive">{errors.taskStatus}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="activityType">Activity Type</Label>
-              <Select
-                value={form.activityType || "__none__"}
-                onValueChange={(v) => set("activityType", v === "__none__" ? "" : v)}
-              >
-                <SelectTrigger id="activityType">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">None</SelectItem>
-                  {ACTIVITY_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CreatableCombobox
+                id="activityType"
+                value={form.activityType}
+                onChange={(v) => set("activityType", v)}
+                options={ACTIVITY_TYPES}
+                placeholder="Select or type..."
+              />
             </div>
           </div>
 

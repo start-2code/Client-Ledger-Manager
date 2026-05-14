@@ -297,6 +297,24 @@ export interface DropdownOptionUpdate {
   value: string;
 }
 
+export type AiChatMessageRole =
+  (typeof AiChatMessageRole)[keyof typeof AiChatMessageRole];
+
+export const AiChatMessageRole = {
+  user: "user",
+  assistant: "assistant",
+} as const;
+
+export interface AiChatMessage {
+  role: AiChatMessageRole;
+  content: string;
+}
+
+export interface AiChatRequest {
+  message: string;
+  history?: AiChatMessage[];
+}
+
 export type ListClientsParams = {
   search?: string;
   type?: string;

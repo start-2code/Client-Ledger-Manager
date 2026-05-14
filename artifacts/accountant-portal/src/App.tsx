@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
+import { AiChat } from "@/components/ai-chat";
 
 import Dashboard from "@/pages/dashboard";
 import ClientsList from "@/pages/clients-list";
@@ -33,6 +34,7 @@ function Router() {
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
+      <AiChat />
     </Layout>
   );
 }

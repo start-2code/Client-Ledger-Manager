@@ -8,6 +8,21 @@
 import * as zod from "zod";
 
 /**
+ * @summary Chat with AI assistant about practice data
+ */
+export const AiChatBody = zod.object({
+  message: zod.string(),
+  history: zod
+    .array(
+      zod.object({
+        role: zod.enum(["user", "assistant"]),
+        content: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

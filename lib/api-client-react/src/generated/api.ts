@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AiChatRequest,
   Client,
   ClientDetail,
   ClientInput,
@@ -57,6 +58,92 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Chat with AI assistant about practice data
+ */
+export const getAiChatUrl = () => {
+  return `/api/ai/chat`;
+};
+
+export const aiChat = async (
+  aiChatRequest: AiChatRequest,
+  options?: RequestInit,
+): Promise<string> => {
+  return customFetch<string>(getAiChatUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(aiChatRequest),
+  });
+};
+
+export const getAiChatMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof aiChat>>,
+    TError,
+    { data: BodyType<AiChatRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof aiChat>>,
+  TError,
+  { data: BodyType<AiChatRequest> },
+  TContext
+> => {
+  const mutationKey = ["aiChat"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof aiChat>>,
+    { data: BodyType<AiChatRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return aiChat(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AiChatMutationResult = NonNullable<
+  Awaited<ReturnType<typeof aiChat>>
+>;
+export type AiChatMutationBody = BodyType<AiChatRequest>;
+export type AiChatMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Chat with AI assistant about practice data
+ */
+export const useAiChat = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof aiChat>>,
+    TError,
+    { data: BodyType<AiChatRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof aiChat>>,
+  TError,
+  { data: BodyType<AiChatRequest> },
+  TContext
+> => {
+  return useMutation(getAiChatMutationOptions(options));
+};
 
 /**
  * @summary Health check

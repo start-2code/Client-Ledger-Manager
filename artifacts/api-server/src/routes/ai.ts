@@ -41,10 +41,10 @@ async function buildDbContext(): Promise<string> {
   ] = await Promise.all([
     db.select({
       id: clientsTable.id,
-      clientCode: clientsTable.clientCode,
-      clientName: clientsTable.clientName,
+      code: clientsTable.code,
+      name: clientsTable.name,
       type: clientsTable.type,
-    }).from(clientsTable).orderBy(clientsTable.clientName),
+    }).from(clientsTable).orderBy(clientsTable.name),
 
     db.select({
       id: tasksTable.id,
@@ -54,14 +54,16 @@ async function buildDbContext(): Promise<string> {
       assignedTo: tasksTable.assignedTo,
       dueDate: tasksTable.dueDate,
       clientId: tasksTable.clientId,
+      clientName: tasksTable.clientName,
     }).from(tasksTable).orderBy(tasksTable.dueDate),
 
     db.select({
       id: taxReturnsTable.id,
       clientId: taxReturnsTable.clientId,
-      taxYear: taxReturnsTable.taxYear,
+      clientName: taxReturnsTable.clientName,
+      clientCode: taxReturnsTable.clientCode,
       taxReturnStatus: taxReturnsTable.taxReturnStatus,
-    }).from(taxReturnsTable).orderBy(taxReturnsTable.taxYear),
+    }).from(taxReturnsTable),
 
     db.select({
       clientId: taxReferencesTable.clientId,
@@ -69,12 +71,13 @@ async function buildDbContext(): Promise<string> {
       vatRegNo: taxReferencesTable.vatRegNo,
       engagementStatus: taxReferencesTable.engagementStatus,
       amlStatus: taxReferencesTable.amlStatus,
+      latestAccountsStatus: taxReferencesTable.latestAccountsStatus,
     }).from(taxReferencesTable),
 
     db.select({
       clientId: financialInfoTable.clientId,
       turnover: financialInfoTable.turnover,
-      accountsStatus: financialInfoTable.accountsStatus,
+      profitBeforeTax: financialInfoTable.profitBeforeTax,
     }).from(financialInfoTable),
 
     db.select({ type: clientsTable.type, count: count() })
@@ -96,7 +99,6 @@ async function buildDbContext(): Promise<string> {
   ]);
 
   const taxRefMap = new Map(taxRefs.map((r) => [r.clientId, r]));
-  const financialMap = new Map(financialInfo.map((f) => [f.clientId, f]));
   const clientMap = new Map(clients.map((c) => [c.id, c]));
 
   const lines: string[] = [];
@@ -120,36 +122,34 @@ async function buildDbContext(): Promise<string> {
   taxReturnsByStatus.forEach((r) => lines.push(`  ${r.status ?? "Unknown"}: ${r.count}`));
 
   lines.push("\n=== ALL CLIENTS ===");
-  lines.push("Code | Name | Type | Engagement | AML | VAT No");
+  lines.push("Code | Name | Type | Engagement | AML | Accounts Status | VAT No");
   clients.forEach((c) => {
     const ref = taxRefMap.get(c.id);
     lines.push(
-      `${c.clientCode ?? "-"} | ${c.clientName} | ${c.type ?? "-"} | ${ref?.engagementStatus ?? "-"} | ${ref?.amlStatus ?? "-"} | ${ref?.vatRegNo ?? "-"}`
+      `${c.code ?? "-"} | ${c.name} | ${c.type ?? "-"} | ${ref?.engagementStatus ?? "-"} | ${ref?.amlStatus ?? "-"} | ${ref?.latestAccountsStatus ?? "-"} | ${ref?.vatRegNo ?? "-"}`
     );
   });
 
   lines.push("\n=== ALL TASKS ===");
   lines.push("ID | Task | Client | Status | Activity | Assigned To | Due Date");
   tasks.forEach((t) => {
-    const client = t.clientId ? clientMap.get(t.clientId) : null;
     lines.push(
-      `${t.id} | ${t.taskName} | ${client?.clientName ?? "-"} | ${t.taskStatus} | ${t.activityType ?? "-"} | ${t.assignedTo ?? "-"} | ${t.dueDate ?? "-"}`
+      `${t.id} | ${t.taskName} | ${t.clientName ?? "-"} | ${t.taskStatus} | ${t.activityType ?? "-"} | ${t.assignedTo ?? "-"} | ${t.dueDate ?? "-"}`
     );
   });
 
   lines.push("\n=== SA TAX RETURNS ===");
-  lines.push("Client | Tax Year | Status");
+  lines.push("Client Code | Client Name | Status");
   taxReturns.forEach((r) => {
-    const client = r.clientId ? clientMap.get(r.clientId) : null;
-    lines.push(`${client?.clientName ?? "-"} | ${r.taxYear ?? "-"} | ${r.taxReturnStatus ?? "-"}`);
+    lines.push(`${r.clientCode ?? "-"} | ${r.clientName ?? "-"} | ${r.taxReturnStatus ?? "-"}`);
   });
 
   lines.push("\n=== FINANCIAL INFO ===");
-  lines.push("Client | Turnover | Accounts Status");
+  lines.push("Client | Turnover | Profit Before Tax");
   financialInfo.forEach((f) => {
     const client = f.clientId ? clientMap.get(f.clientId) : null;
     lines.push(
-      `${client?.clientName ?? "-"} | ${f.turnover != null ? `£${Number(f.turnover).toLocaleString()}` : "-"} | ${f.accountsStatus ?? "-"}`
+      `${client?.name ?? "-"} | ${f.turnover != null ? `£${Number(f.turnover).toLocaleString()}` : "-"} | ${f.profitBeforeTax != null ? `£${Number(f.profitBeforeTax).toLocaleString()}` : "-"}`
     );
   });
 

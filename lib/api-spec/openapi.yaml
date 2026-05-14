@@ -1,22 +1,32 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Accountant Practice Backoffice API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: clients
+    description: Client management
+  - name: tasks
+    description: Task management
+  - name: financial
+    description: Financial information
+  - name: tax-references
+    description: Tax reference information
+  - name: tax-returns
+    description: SA Tax return work status
+  - name: dashboard
+    description: Dashboard aggregates
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +34,860 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: List all clients
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: engagementStatus
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientList"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get a client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client details with related data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      summary: Delete a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List tasks
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: activityType
+          in: query
+          schema:
+            type: string
+        - name: assignedTo
+          in: query
+          schema:
+            type: string
+        - name: overdue
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskList"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}:
+    get:
+      operationId: getTask
+      tags: [tasks]
+      summary: Get a task by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /financial-info:
+    get:
+      operationId: listFinancialInfo
+      tags: [financial]
+      summary: List financial info
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: clientType
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of financial records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FinancialInfo"
+
+  /financial-info/{clientId}:
+    get:
+      operationId: getFinancialInfo
+      tags: [financial]
+      summary: Get financial info for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Financial info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialInfo"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateFinancialInfo
+      tags: [financial]
+      summary: Update financial info for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FinancialInfoUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinancialInfo"
+
+  /tax-references:
+    get:
+      operationId: listTaxReferences
+      tags: [tax-references]
+      summary: List tax references
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: engagementStatus
+          in: query
+          schema:
+            type: string
+        - name: amlStatus
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of tax references
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaxReference"
+
+  /tax-references/{clientId}:
+    get:
+      operationId: getTaxReference
+      tags: [tax-references]
+      summary: Get tax reference for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tax reference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxReference"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTaxReference
+      tags: [tax-references]
+      summary: Update tax reference for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxReferenceUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxReference"
+
+  /tax-returns:
+    get:
+      operationId: listTaxReturns
+      tags: [tax-returns]
+      summary: List SA tax return statuses
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: clientType
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of tax return records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxReturnList"
+
+  /tax-returns/{id}:
+    patch:
+      operationId: updateTaxReturn
+      tags: [tax-returns]
+      summary: Update a tax return record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaxReturnUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxReturn"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary statistics
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/overdue-tasks:
+    get:
+      operationId: getDashboardOverdueTasks
+      tags: [dashboard]
+      summary: Get overdue tasks for dashboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Overdue tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+  /dashboard/recent-clients:
+    get:
+      operationId: getDashboardRecentClients
+      tags: [dashboard]
+      summary: Get recently added clients
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Client:
+      type: object
+      required: [id, code, name, type]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        addressLine1:
+          type: ["string", "null"]
+        addressLine2:
+          type: ["string", "null"]
+        town:
+          type: ["string", "null"]
+        county:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        contactNumber:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ClientInput:
+      type: object
+      required: [code, name, type]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        addressLine1:
+          type: ["string", "null"]
+        addressLine2:
+          type: ["string", "null"]
+        town:
+          type: ["string", "null"]
+        county:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        contactNumber:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+
+    ClientUpdate:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        addressLine1:
+          type: ["string", "null"]
+        addressLine2:
+          type: ["string", "null"]
+        town:
+          type: ["string", "null"]
+        county:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        contactNumber:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+
+    ClientList:
+      type: object
+      required: [clients, total, page, limit]
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/Client"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    ClientDetail:
+      type: object
+      required: [client]
+      properties:
+        client:
+          $ref: "#/components/schemas/Client"
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+        financialInfo:
+          $ref: "#/components/schemas/FinancialInfo"
+          nullable: true
+        taxReference:
+          $ref: "#/components/schemas/TaxReference"
+          nullable: true
+        taxReturn:
+          $ref: "#/components/schemas/TaxReturn"
+          nullable: true
+
+    Task:
+      type: object
+      required: [id, clientId, taskName, taskStatus]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: string
+        activityType:
+          type: ["string", "null"]
+        assignedTo:
+          type: ["string", "null"]
+        taskName:
+          type: string
+        taskStatus:
+          type: string
+        dueDate:
+          type: ["string", "null"]
+          format: date
+        isOverdue:
+          type: boolean
+
+    TaskInput:
+      type: object
+      required: [taskName, taskStatus]
+      properties:
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        activityType:
+          type: ["string", "null"]
+        assignedTo:
+          type: ["string", "null"]
+        taskName:
+          type: string
+        taskStatus:
+          type: string
+        dueDate:
+          type: ["string", "null"]
+
+    TaskUpdate:
+      type: object
+      properties:
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        activityType:
+          type: ["string", "null"]
+        assignedTo:
+          type: ["string", "null"]
+        taskName:
+          type: string
+        taskStatus:
+          type: string
+        dueDate:
+          type: ["string", "null"]
+
+    TaskList:
+      type: object
+      required: [tasks, total, page, limit]
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    FinancialInfo:
+      type: object
+      required: [id, clientId]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientCode:
+          type: ["string", "null"]
+        clientType:
+          type: ["string", "null"]
+        turnover:
+          type: ["number", "null"]
+        profitBeforeTax:
+          type: ["number", "null"]
+        totalIncome:
+          type: ["number", "null"]
+        totalSelfEmploymentIncome:
+          type: ["number", "null"]
+        totalProfitFromSelfEmployments:
+          type: ["number", "null"]
+        avgEmployees:
+          type: ["number", "null"]
+
+    FinancialInfoUpdate:
+      type: object
+      properties:
+        turnover:
+          type: ["number", "null"]
+        profitBeforeTax:
+          type: ["number", "null"]
+        totalIncome:
+          type: ["number", "null"]
+        totalSelfEmploymentIncome:
+          type: ["number", "null"]
+        totalProfitFromSelfEmployments:
+          type: ["number", "null"]
+        avgEmployees:
+          type: ["number", "null"]
+
+    TaxReference:
+      type: object
+      required: [id, clientId]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        utr:
+          type: ["string", "null"]
+        payeRef:
+          type: ["string", "null"]
+        payeAccountsOfficeRef:
+          type: ["string", "null"]
+        vatRegNo:
+          type: ["string", "null"]
+        vatRegDate:
+          type: ["string", "null"]
+        taxOffice:
+          type: ["string", "null"]
+        niNumber:
+          type: ["string", "null"]
+        companyRegNo:
+          type: ["string", "null"]
+        dateOfIncorporation:
+          type: ["string", "null"]
+        amlStatus:
+          type: ["string", "null"]
+        latestAccountsStatus:
+          type: ["string", "null"]
+        engagementStatus:
+          type: ["string", "null"]
+
+    TaxReferenceUpdate:
+      type: object
+      properties:
+        utr:
+          type: ["string", "null"]
+        payeRef:
+          type: ["string", "null"]
+        payeAccountsOfficeRef:
+          type: ["string", "null"]
+        vatRegNo:
+          type: ["string", "null"]
+        vatRegDate:
+          type: ["string", "null"]
+        taxOffice:
+          type: ["string", "null"]
+        niNumber:
+          type: ["string", "null"]
+        companyRegNo:
+          type: ["string", "null"]
+        dateOfIncorporation:
+          type: ["string", "null"]
+        amlStatus:
+          type: ["string", "null"]
+        latestAccountsStatus:
+          type: ["string", "null"]
+        engagementStatus:
+          type: ["string", "null"]
+
+    TaxReturn:
+      type: object
+      required: [id, clientId]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: ["integer", "null"]
+        clientCode:
+          type: ["string", "null"]
+        clientName:
+          type: string
+        clientType:
+          type: ["string", "null"]
+        taxReturnStatus:
+          type: ["string", "null"]
+
+    TaxReturnUpdate:
+      type: object
+      properties:
+        taxReturnStatus:
+          type: ["string", "null"]
+
+    TaxReturnList:
+      type: object
+      required: [taxReturns, total, page, limit]
+      properties:
+        taxReturns:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaxReturn"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    DashboardSummary:
+      type: object
+      required: [totalClients, overdueTasksCount, activeClientsCount, tasksByStatus, clientsByType, taxReturnsByStatus]
+      properties:
+        totalClients:
+          type: integer
+        overdueTasksCount:
+          type: integer
+        activeClientsCount:
+          type: integer
+        totalTasks:
+          type: integer
+        tasksByStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+        clientsByType:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+        taxReturnsByStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+        totalTurnover:
+          type: ["number", "null"]
+        vatRegisteredCount:
+          type: integer
+
+    StatusCount:
+      type: object
+      required: [label, count]
+      properties:
+        label:
+          type: string
+        count:
+          type: integer

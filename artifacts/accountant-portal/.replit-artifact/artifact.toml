@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Accountant Portal"
+version = "1.0.0"
+id = "artifacts/accountant-portal"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19714
+
+[services.development]
+run = "pnpm --filter @workspace/accountant-portal run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/accountant-portal", "run", "build" ]
+publicDir = "artifacts/accountant-portal/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19714"
+BASE_PATH = "/"

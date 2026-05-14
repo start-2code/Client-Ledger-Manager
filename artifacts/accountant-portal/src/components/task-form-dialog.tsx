@@ -71,6 +71,8 @@ export function TaskFormDialog({
   const taskStatusOptions = taskStatusData?.options.map((o) => o.value) ?? TASK_STATUSES;
   const { data: activityTypeData } = useListDropdownOptions({ category: "activity_type" });
   const activityTypeOptions = activityTypeData?.options.map((o) => o.value) ?? ACTIVITY_TYPES;
+  const { data: assignedToData } = useListDropdownOptions({ category: "assigned_to" });
+  const assignedToOptions = assignedToData?.options.map((o) => o.value) ?? [];
 
   const [form, setForm] = useState(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -222,11 +224,12 @@ export function TaskFormDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="assignedTo">Assigned To</Label>
-              <Input
+              <CreatableCombobox
                 id="assignedTo"
                 value={form.assignedTo}
-                onChange={(e) => set("assignedTo", e.target.value)}
-                placeholder="Name or team"
+                onChange={(v) => set("assignedTo", v)}
+                options={assignedToOptions}
+                placeholder="Select or type a name..."
               />
             </div>
           </div>

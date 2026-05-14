@@ -8,6 +8,7 @@ import {
   getGetClientQueryKey,
   getListClientsQueryKey,
   getListTasksQueryKey,
+  useListDropdownOptions,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,6 +41,9 @@ export default function ClientDetail() {
   const [, navigate] = useLocation();
   const id = parseInt(params?.id || "0", 10);
   const queryClient = useQueryClient();
+
+  const { data: taskStatusData } = useListDropdownOptions({ category: "task_status" });
+  const taskStatuses = taskStatusData?.options.map((o) => o.value) ?? ["Planned", "In Progress", "Complete"];
 
   const { data, isLoading } = useGetClient(id, {
     query: { enabled: !!id, queryKey: getGetClientQueryKey(id) },
@@ -441,9 +445,9 @@ export default function ClientDetail() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Planned">Planned</SelectItem>
-                            <SelectItem value="In Progress">In Progress</SelectItem>
-                            <SelectItem value="Complete">Complete</SelectItem>
+                            {taskStatuses.map((s) => (
+                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <DropdownMenu>

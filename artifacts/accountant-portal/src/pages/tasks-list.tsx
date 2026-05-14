@@ -5,6 +5,7 @@ import {
   useUpdateTask,
   useDeleteTask,
   getListTasksQueryKey,
+  useListDropdownOptions,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -46,6 +47,9 @@ export default function TasksList() {
   const [deleteTask, setDeleteTask] = useState<TaskRow | null>(null);
 
   const queryClient = useQueryClient();
+
+  const { data: statusData } = useListDropdownOptions({ category: "task_status" });
+  const taskStatuses = statusData?.options.map((o) => o.value) ?? ["Planned", "In Progress", "Complete"];
 
   const { data, isLoading } = useListTasks({
     status: status !== "all" ? status : undefined,
@@ -102,9 +106,9 @@ export default function TasksList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Planned">Planned</SelectItem>
-            <SelectItem value="In Progress">In Progress</SelectItem>
-            <SelectItem value="Complete">Complete</SelectItem>
+            {taskStatuses.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -169,9 +173,9 @@ export default function TasksList() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Planned">Planned</SelectItem>
-                        <SelectItem value="In Progress">In Progress</SelectItem>
-                        <SelectItem value="Complete">Complete</SelectItem>
+                        {taskStatuses.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </TableCell>

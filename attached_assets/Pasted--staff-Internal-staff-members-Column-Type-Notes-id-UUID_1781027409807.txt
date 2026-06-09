@@ -1,0 +1,213 @@
+
+staff — Internal staff members
+Column	Type	Notes
+id	UUID PK	
+full_name	Text	
+email	Text	
+role	Text	Director / Manager / Preparer / Admin
+office	Text	Tooting / Wallington / South Croydon / Uckfield / Clapham
+is_active	Boolean	
+created_at	Timestamp	
+clients — Master record per entity
+Column	Type	Notes
+id	UUID PK	
+taxcalc_client_code	Text	Unique. Preserved exactly. Never modified.
+taxcalc_client_type	Text	Raw TaxCalc type
+display_name	Text	
+legal_name	Text	
+trading_name	Text	
+entity_type	Text	Individual / Sole Trader / Partnership / Ltd / LLP / Trust / Charity
+client_status	Text	Active / Inactive / Prospect / Former / Dormant
+practice_office	Text	
+responsible_company	Text	Nanotax Ltd / CT Accountants Ltd / JSO
+practice_director_id	UUID FK → staff	
+client_owner_id	UUID FK → staff	
+risk_rating	Text	Low / Medium / High
+complexity_rating	Text	Simple / Standard / Complex
+related_client_codes	Text	Comma-separated TaxCalc codes linking individuals to their companies
+archive_flag	Boolean	Default false
+delete_exclude_flag	Boolean	Default false
+created_at	Timestamp	
+updated_at	Timestamp	
+contacts — People linked to a client
+
+One client can have multiple contacts (main contact, directors, spouse, bookkeeper). The flat CSV will have prefixed columns like main_forename, main_email, spouse_name — the importer splits these into individual rows here.
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	
+is_main_contact	Boolean	
+contact_type	Text	Main / Director / Spouse / Bookkeeper / Payroll / Other
+contact_role	Text	Free text role description
+title	Text	
+forename	Text	
+middle_name	Text	
+surname	Text	
+date_of_birth	Date	
+main_email	Text	
+secondary_email	Text	
+mobile_number	Text	
+landline_number	Text	
+work_number	Text	
+created_at	Timestamp	
+addresses — Addresses linked to a contact
+
+Separate table so one contact can have correspondence, registered office, and trading addresses.
+Column	Type	Notes
+id	UUID PK	
+contact_id	UUID FK → contacts	
+address_type	Text	Correspondence / Registered Office / Trading / Billing
+line1	Text	
+line2	Text	
+town_city	Text	
+county	Text	
+postcode	Text	
+country	Text	Default 'UK'
+is_primary	Boolean	
+created_at	Timestamp	
+client_identifiers — Tax & regulatory numbers
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	One row per client
+utr	Text	Personal / partnership / trust / CT UTR
+national_insurance_number	Text	
+company_registration_number	Text	Ltd / LLPs
+vat_registration_number	Text	
+paye_reference	Text	
+accounts_office_reference	Text	
+client_services — Service flags
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	One row per client
+client_category	Text	Tax-only / Accounts / Bookkeeping / Payroll / VAT / Advisory etc.
+is_self_assessment	Boolean	
+is_corporation_tax	Boolean	
+is_accounts_production	Boolean	
+is_vat	Boolean	
+mtd_vat_enabled	Boolean	
+is_payroll	Boolean	
+is_cis	Boolean	
+is_bookkeeping	Boolean	
+is_company_secretarial	Boolean	
+is_confirmation_statement	Boolean	
+is_registered_office	Boolean	
+compliance_deadlines — Key statutory dates
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	One row per client (updated on re-import)
+accounting_year_end	Date	
+next_accounts_period_start	Date	
+next_accounts_period_end	Date	
+companies_house_accounts_due	Date	
+ct_return_due_date	Date	
+ct_payment_due_date	Date	
+sa_tax_year	Text	e.g. 2024/25
+sa_filing_deadline	Date	
+sa_payment_deadline	Date	
+vat_frequency	Text	Monthly / Quarterly / Annual
+vat_stagger	Text	1 / 2 / 3 / Monthly
+vat_quarter_end	Date	
+vat_return_due_date	Date	
+confirmation_statement_date	Date	
+confirmation_statement_due_date	Date	
+updated_at	Timestamp	
+jobs_workflow — All production jobs (active and historic)
+
+Active jobs have open statuses; historic jobs are status Filed or Complete. No separate archive table.
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	
+job_type	Text	Accounts / SA / CT / VAT / Payroll / Bookkeeping / Onboarding
+tax_year_or_period	Text	e.g. 2024/25
+period_end	Date	
+job_status	Text	Not Started / Awaiting Records / In Progress / Review / Query / Approval / Filed / Complete
+preparer_id	UUID FK → staff	
+reviewer_id	UUID FK → staff	
+job_owner_id	UUID FK → staff	
+records_requested_date	Date	
+records_received_date	Date	
+client_approval_requested_date	Date	
+client_approval_received_date	Date	
+filing_completed_date	Date	
+job_completion_date	Date	
+vat_return_status	Text	Awaiting Records / In Progress / Review / Submitted
+last_vat_period_submitted_to	Date	
+last_vat_submission_date	Date	
+created_at	Timestamp	
+updated_at	Timestamp	
+client_notes
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	One row per client
+general_notes	Text	Migrated from TaxCalc
+tax_notes	Text	
+accounts_notes	Text	
+vat_notes	Text	
+updated_at	Timestamp	
+aml_kyc
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	One row per client
+aml_check_required	Boolean	
+aml_status	Text	Not Started / Pending / Complete / Expired
+aml_last_review_date	Date	
+aml_next_review_date	Date	
+id_verified	Boolean	
+proof_of_address_verified	Boolean	
+pep_status	Text	Yes / No / Unknown
+risk_assessment_completed	Boolean	
+aml_risk_rating	Text	Low / Medium / High
+professional_clearance_received	Boolean	
+previous_accountant_details	Text	
+data_quality_flags
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	One row per client
+source_confidence	Text	High / Medium / Low
+duplicate_match_flag	Boolean	
+duplicate_match_reason	Text	Same UTR / CRN / email
+taxcalc_import_batches — One record per CSV upload
+Column	Type	Notes
+id	UUID PK	
+batch_reference	Text	e.g. IMP-2025-001
+file_name	Text	
+imported_at	Timestamp	
+imported_by_id	UUID FK → staff	
+record_count	Integer	
+new_records	Integer	
+updated_records	Integer	
+duplicate_flags	Integer	
+import_status	Text	Pending / Processing / Complete / Failed
+taxcalc_sync_log — Row-level audit trail
+Column	Type	Notes
+id	UUID PK	
+client_id	UUID FK → clients	
+batch_id	UUID FK → taxcalc_import_batches	
+action	Text	Created / Updated / Flagged / Skipped
+raw_data	JSONB	Full original CSV row — never modified
+synced_at	Timestamp	
+taxcalc_column_mappings — Flexible column mapper
+
+Maps TaxCalc's CSV headers to our DB fields. Set up once, reused every import. Handles TaxCalc naming variations.
+Column	Type	Notes
+id	UUID PK	
+taxcalc_header	Text	Exact column name from TaxCalc CSV e.g. "Display Name"
+target_table	Text	e.g. clients
+target_column	Text	e.g. display_name
+contact_prefix	Text	For contacts: main / spouse / director (handles flat CSV splitting)
+is_active	Boolean	
+Summary — 13 tables, all Phase 1
+#	Table	Rows per client
+1	staff	Shared lookup
+2	clients	1
+3	contacts	Many (main + spouse + directors)
+4	addresses	Many (per contact)
+5	client_identifiers	1
+6	client_services	1
+7	compliance_deadlines	1
+8	jobs_workflow	Many (active + historic)
+9	client_notes	1
+10	aml_kyc	1
+11	data_quality_flags	1
+12	taxcalc_import_batches	Shared per batch
+13	taxcalc_sync_log	1 per import
+14	taxcalc_column_mappings	Shared lookup

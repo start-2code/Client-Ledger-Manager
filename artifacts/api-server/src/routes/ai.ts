@@ -7,8 +7,9 @@ import {
   taxReturnsTable,
   taxReferencesTable,
   financialInfoTable,
+  clientFeesTable,
 } from "@workspace/db";
-import { count, sql, sum } from "drizzle-orm";
+import { count, sql, sum, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
@@ -32,6 +33,7 @@ async function buildDbContext(): Promise<string> {
     taxReturns,
     taxRefs,
     financialInfo,
+    clientFees,
     clientsByType,
     tasksByStatus,
     taxReturnsByStatus,
@@ -79,6 +81,22 @@ async function buildDbContext(): Promise<string> {
       turnover: financialInfoTable.turnover,
       profitBeforeTax: financialInfoTable.profitBeforeTax,
     }).from(financialInfoTable),
+
+    db.select({
+      clientId: clientFeesTable.clientId,
+      annualAccountsFee: clientFeesTable.annualAccountsFee,
+      taxReturnFee: clientFeesTable.taxReturnFee,
+      auditFee: clientFeesTable.auditFee,
+      bookkeepingFee: clientFeesTable.bookkeepingFee,
+      vatReturnsFee: clientFeesTable.vatReturnsFee,
+      payrollFee: clientFeesTable.payrollFee,
+      consultancyFee: clientFeesTable.consultancyFee,
+      cashflowFee: clientFeesTable.cashflowFee,
+      managementAccountsFee: clientFeesTable.managementAccountsFee,
+      companySecretarialFee: clientFeesTable.companySecretarialFee,
+      otherFee: clientFeesTable.otherFee,
+      totalFee: clientFeesTable.totalFee,
+    }).from(clientFeesTable).where(isNotNull(clientFeesTable.totalFee)),
 
     db.select({ type: clientsTable.type, count: count() })
       .from(clientsTable).groupBy(clientsTable.type),
@@ -152,6 +170,21 @@ async function buildDbContext(): Promise<string> {
       `${client?.name ?? "-"} | ${f.turnover != null ? `£${Number(f.turnover).toLocaleString()}` : "-"} | ${f.profitBeforeTax != null ? `£${Number(f.profitBeforeTax).toLocaleString()}` : "-"}`
     );
   });
+
+  if (clientFees.length > 0) {
+    lines.push("\n=== CLIENT FEES ===");
+    lines.push("Client | Total Fee | Annual Accounts | Tax Return | Bookkeeping | VAT Returns | Payroll | Audit | Consultancy | Mgmt Accounts | Co. Secretarial | Cashflow | Other");
+    clientFees.forEach((f) => {
+      const client = f.clientId ? clientMap.get(f.clientId) : null;
+      const fmt = (v: string | number | null | undefined) => v != null ? `£${Number(v).toLocaleString()}` : "-";
+      lines.push(
+        `${client?.name ?? "-"} | ${fmt(f.totalFee)} | ${fmt(f.annualAccountsFee)} | ${fmt(f.taxReturnFee)} | ${fmt(f.bookkeepingFee)} | ${fmt(f.vatReturnsFee)} | ${fmt(f.payrollFee)} | ${fmt(f.auditFee)} | ${fmt(f.consultancyFee)} | ${fmt(f.managementAccountsFee)} | ${fmt(f.companySecretarialFee)} | ${fmt(f.cashflowFee)} | ${fmt(f.otherFee)}`
+      );
+    });
+  } else {
+    lines.push("\n=== CLIENT FEES ===");
+    lines.push("No fee data available yet. Fees are imported from TaxCalc via the Admin > TaxCalc Import tab.");
+  }
 
   return lines.join("\n");
 }

@@ -99,6 +99,12 @@ router.post("/run", upload.single("file"), async (req, res) => {
 });
 
 router.get("/status/:id", async (req, res) => {
+  // Must not be cached — the whole point of this endpoint is to poll for
+  // live status changes.  ETags / 304s would mean the stale-detection logic
+  // below never runs when the batch is stuck in "running".
+  res.setHeader("Cache-Control", "no-store");
+  res.removeHeader("ETag");
+
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
@@ -109,20 +115,21 @@ router.get("/status/:id", async (req, res) => {
       .limit(1);
     if (!batch) return res.status(404).json({ error: "Batch not found" });
 
-    // If the batch has been running/pending for more than 20 minutes it's
-    // almost certainly orphaned (server restart killed the background task).
+    // If the batch has been running/pending for more than 5 minutes it's
+    // almost certainly orphaned (server restart, unhandled crash, etc.).
     // Mark it as an error so the frontend stops polling.
     if (batch.status === "running" || batch.status === "pending") {
       const ageMs = Date.now() - new Date(batch.importedAt).getTime();
-      if (ageMs > 20 * 60 * 1000) {
+      if (ageMs > 5 * 60 * 1000) {
         const [updated] = await db
           .update(importBatchesTable)
           .set({
             status: "error",
-            errorMessage: "Import timed out — the server may have restarted. Please re-import.",
+            errorMessage: "Import timed out after 5 minutes. The server may have restarted mid-import. Please re-import.",
           })
           .where(eq(importBatchesTable.id, id))
           .returning();
+        req.log.warn({ batchId: id, ageMs }, "Marked stale batch as error via status poll");
         return res.json(updated);
       }
     }

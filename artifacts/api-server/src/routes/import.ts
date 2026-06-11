@@ -108,6 +108,25 @@ router.get("/status/:id", async (req, res) => {
       .where(eq(importBatchesTable.id, id))
       .limit(1);
     if (!batch) return res.status(404).json({ error: "Batch not found" });
+
+    // If the batch has been running/pending for more than 20 minutes it's
+    // almost certainly orphaned (server restart killed the background task).
+    // Mark it as an error so the frontend stops polling.
+    if (batch.status === "running" || batch.status === "pending") {
+      const ageMs = Date.now() - new Date(batch.importedAt).getTime();
+      if (ageMs > 20 * 60 * 1000) {
+        const [updated] = await db
+          .update(importBatchesTable)
+          .set({
+            status: "error",
+            errorMessage: "Import timed out — the server may have restarted. Please re-import.",
+          })
+          .where(eq(importBatchesTable.id, id))
+          .returning();
+        return res.json(updated);
+      }
+    }
+
     return res.json(batch);
   } catch (err) {
     req.log.error({ err }, "Import status fetch failed");

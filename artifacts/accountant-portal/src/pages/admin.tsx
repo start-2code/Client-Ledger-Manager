@@ -147,6 +147,7 @@ function CategoryPanel({ category, description }: { category: string; descriptio
 }
 
 const DONE_STATUSES = new Set(["success", "partial", "error"]);
+const POLL_TIMEOUT_MS = 12 * 60 * 1000; // 12 minutes — give up client-side
 
 function ImportPanel() {
   const qc = useQueryClient();
@@ -155,6 +156,7 @@ function ImportPanel() {
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [pendingBatchId, setPendingBatchId] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
+  const pollStartRef = useRef<number | null>(null);
 
   const previewMutation = useImportPreview();
   const runMutation = useImportRun();
@@ -175,6 +177,7 @@ function ImportPanel() {
     if (DONE_STATUSES.has(batchStatus.status ?? "")) {
       qc.invalidateQueries({ queryKey: getImportHistoryQueryKey() });
       setPendingBatchId(null);
+      pollStartRef.current = null;
       if (batchStatus.status === "success") {
         toast.success(
           `Import complete — ${batchStatus.clientsAdded ?? 0} added, ${batchStatus.clientsUpdated ?? 0} updated, ${batchStatus.clientsRemoved ?? 0} removed`
@@ -182,10 +185,24 @@ function ImportPanel() {
       } else if (batchStatus.status === "partial") {
         toast.warning("Import completed with some errors — see history below");
       } else {
-        toast.error(batchStatus.errorMessage ?? "Import failed");
+        toast.error(batchStatus.errorMessage ?? "Import failed — see history for details");
       }
     }
   }, [batchStatus?.status]);
+
+  // Client-side safety net: stop polling after POLL_TIMEOUT_MS even if server
+  // never transitions the batch to a terminal state.
+  React.useEffect(() => {
+    if (!pendingBatchId) return;
+    if (!pollStartRef.current) pollStartRef.current = Date.now();
+    const elapsed = Date.now() - pollStartRef.current;
+    if (elapsed > POLL_TIMEOUT_MS) {
+      setPendingBatchId(null);
+      pollStartRef.current = null;
+      qc.invalidateQueries({ queryKey: getImportHistoryQueryKey() });
+      toast.error("Import is taking unusually long. Check the history table — it may have completed or failed in the background.");
+    }
+  }, [batchStatus]);
 
   const isRunning = !!pendingBatchId;
 

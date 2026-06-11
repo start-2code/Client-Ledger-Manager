@@ -5,6 +5,7 @@ import {
   financialInfoTable,
   taxReferencesTable,
   taxReturnsTable,
+  saReturnsTable,
 } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { resolve } from "path";
@@ -58,7 +59,7 @@ async function main() {
   console.log("Seeding database from Excel files...");
 
   // Clear existing data
-  await db.execute(sql`TRUNCATE tax_returns, tax_references, financial_info, tasks, clients RESTART IDENTITY CASCADE`);
+  await db.execute(sql`TRUNCATE sa_returns, tax_returns, tax_references, financial_info, tasks, clients RESTART IDENTITY CASCADE`);
 
   // ---- 1. Clients ----
   const contactRows = await readExcel(
@@ -216,6 +217,30 @@ async function main() {
   for (let i = 0; i < taxReturnInserts.length; i += 100) {
     const batch = taxReturnInserts.slice(i, i + 100);
     await db.insert(taxReturnsTable).values(batch).onConflictDoNothing();
+  }
+
+  // ---- 6. SA Returns (bootstrap from same Excel — tax year 2024/25) ----
+  const saReturnInserts = taxReturnRows
+    .filter((r) => r["Client name"])
+    .map((r) => {
+      const code = str(r["Client code"]);
+      const clientName = str(r["Client name"])!;
+      const client = code ? clientByCode.get(code) : clientByName.get(clientName.toLowerCase());
+      if (!client) return null;
+      return {
+        clientId: client.id,
+        clientCode: code,
+        taxYear: "2024",
+        returnType: "personal" as const,
+        returnStatus: str(r["Tax return status"]),
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+
+  console.log(`Inserting ${saReturnInserts.length} SA return records...`);
+  for (let i = 0; i < saReturnInserts.length; i += 100) {
+    const batch = saReturnInserts.slice(i, i + 100);
+    await db.insert(saReturnsTable).values(batch).onConflictDoNothing();
   }
 
   console.log("Seeding complete!");

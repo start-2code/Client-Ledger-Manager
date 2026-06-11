@@ -24,6 +24,7 @@ import { format } from "date-fns";
 const CATEGORIES = [
   { key: "client_type", label: "Client Types", description: "Entity types used when creating or editing clients." },
   { key: "task_status", label: "Task Statuses", description: "Status values for tasks." },
+  { key: "sa_return_status", label: "SA Return Statuses", description: "Self Assessment return status values shown on the Tax Returns page and client SA Returns tab." },
   { key: "activity_type", label: "Activity Types", description: "Activity categories used when creating tasks." },
   { key: "assigned_to", label: "Staff / Assignees", description: "Team members and individuals that can be assigned to tasks." },
   { key: "aml_status", label: "AML Statuses", description: "AML compliance statuses on tax reference records." },

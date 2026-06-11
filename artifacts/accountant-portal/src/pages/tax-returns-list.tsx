@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
-import { useListTaxReturns, useUpdateTaxReturn, getListTaxReturnsQueryKey } from "@workspace/api-client-react";
+import {
+  useListTaxReturns,
+  useUpdateTaxReturn,
+  getListTaxReturnsQueryKey,
+  useListDropdownOptions,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,21 +14,14 @@ import { Search, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
-const SA_STATUSES = [
-  "Not Started",
-  "Information Requested",
-  "In Progress",
-  "Sent for Approval",
-  "Approved by Client",
-  "Filed Online to HMRC",
-  "Not Required"
-];
-
 export default function TaxReturnsList() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
+
+  const { data: statusData } = useListDropdownOptions({ category: "sa_return_status" });
+  const saStatuses = statusData?.options.map((o) => o.value) ?? [];
 
   const { data, isLoading } = useListTaxReturns({
     search: search || undefined,
@@ -54,8 +52,8 @@ export default function TaxReturnsList() {
       <div className="flex flex-col sm:flex-row gap-4 items-center bg-card p-4 rounded-lg border shadow-sm">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search clients..." 
+          <Input
+            placeholder="Search clients..."
             className="pl-9"
             value={search}
             onChange={(e) => {
@@ -70,7 +68,7 @@ export default function TaxReturnsList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            {SA_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            {saStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -114,16 +112,16 @@ export default function TaxReturnsList() {
                     {tr.clientType || '-'}
                   </TableCell>
                   <TableCell>
-                    <Select 
-                      value={tr.taxReturnStatus || "Not Started"} 
+                    <Select
+                      value={tr.taxReturnStatus || ""}
                       onValueChange={(val) => handleStatusChange(tr.id, val)}
                       disabled={updateTaxReturn.isPending}
                     >
                       <SelectTrigger className="h-8 text-xs font-medium">
-                        <SelectValue />
+                        <SelectValue placeholder="Set status…" />
                       </SelectTrigger>
                       <SelectContent>
-                        {SA_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        {saStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </TableCell>
@@ -139,23 +137,23 @@ export default function TaxReturnsList() {
             )}
           </TableBody>
         </Table>
-        
+
         {data && data.total > 0 && (
           <div className="p-4 border-t flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
               Showing {(page - 1) * 50 + 1} to {Math.min(page * 50, data.total)} of {data.total} records
             </span>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}
               >
                 Previous
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 disabled={page * 50 >= data.total}
                 onClick={() => setPage(p => p + 1)}

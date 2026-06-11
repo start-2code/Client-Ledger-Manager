@@ -6,6 +6,7 @@ import {
   taxReferencesTable,
   taxReturnsTable,
   saReturnsTable,
+  dropdownOptionsTable,
 } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { resolve } from "path";
@@ -241,6 +242,17 @@ async function main() {
   for (let i = 0; i < saReturnInserts.length; i += 100) {
     const batch = saReturnInserts.slice(i, i + 100);
     await db.insert(saReturnsTable).values(batch).onConflictDoNothing();
+  }
+
+  // ---- 7. SA Return Status dropdown options (derived from actual data) ----
+  const distinctStatuses = [...new Set(
+    taxReturnInserts.map((r) => r.taxReturnStatus).filter((s): s is string => !!s)
+  )].sort();
+  if (distinctStatuses.length > 0) {
+    await db.insert(dropdownOptionsTable)
+      .values(distinctStatuses.map((value) => ({ category: "sa_return_status", value })))
+      .onConflictDoNothing();
+    console.log(`Inserted ${distinctStatuses.length} SA return status options`);
   }
 
   console.log("Seeding complete!");

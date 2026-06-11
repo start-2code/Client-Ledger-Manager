@@ -73,7 +73,7 @@ router.post("/run", upload.single("file"), async (req, res) => {
             totalClients: (result.clientsAdded ?? 0) + (result.clientsUpdated ?? 0),
             clientsAdded: result.clientsAdded ?? 0,
             clientsUpdated: result.clientsUpdated ?? 0,
-            clientsRemoved: result.clientsRemoved ?? 0,
+            clientsRemoved: 0,
             saReturnsCount: result.saReturnsCount ?? 0,
             ctReturnsCount: result.ctReturnsCount ?? 0,
             accountsPeriodsCount: result.accountsPeriodsCount ?? 0,

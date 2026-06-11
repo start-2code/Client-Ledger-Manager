@@ -11,7 +11,7 @@ import {
   mtdItsaTable,
   importBatchesTable,
 } from "@workspace/db";
-import { eq, inArray, notInArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import type { ClientRecord, SaReturnData } from "./taxcalc-parser.js";
 
@@ -30,7 +30,6 @@ function n(v: string | null | undefined): string | null {
 export interface ImportResult {
   clientsAdded: number;
   clientsUpdated: number;
-  clientsRemoved: number;
   saReturnsCount: number;
   ctReturnsCount: number;
   accountsPeriodsCount: number;
@@ -84,36 +83,22 @@ export async function runImport(
   const errors: string[] = [];
   let clientsAdded = 0;
   let clientsUpdated = 0;
-  let clientsRemoved = 0;
   let saReturnsCount = 0;
   let ctReturnsCount = 0;
   let accountsPeriodsCount = 0;
 
-  const incomingCodes = [...clients.keys()];
-
   // Get existing client codes and their IDs
   const existing = await db.select({ id: clientsTable.id, code: clientsTable.code }).from(clientsTable);
   const existingMap = new Map(existing.map((e) => [e.code, e.id]));
-  const existingCodes = new Set(existing.map((e) => e.code));
-  const incomingSet = new Set(incomingCodes);
+  const existingCodes = new Set(existingMap.keys());
 
   // Build the code→id map for new/existing clients
   const codeToId = new Map<string, number>();
 
   // Run everything in a transaction
   await db.transaction(async (tx) => {
-    // 1. Delete clients that are no longer in TaxCalc
-    const removedCodes = existing.filter((e) => !incomingSet.has(e.code)).map((e) => e.code);
-    if (removedCodes.length > 0) {
-      const removedIds = removedCodes.map((c) => existingMap.get(c)!);
-      // Delete all TaxCalc-sourced child records for removed clients
-      await tx.delete(clientsTable).where(
-        inArray(clientsTable.code, removedCodes)
-      );
-      clientsRemoved = removedCodes.length;
-    }
-
-    // 2. Upsert all clients
+    // 1. Upsert only clients present in the spreadsheet — clients not in the
+    //    import are left completely untouched.
     for (const [code, cr] of clients) {
       try {
         const clientData = {
@@ -625,10 +610,10 @@ export async function runImport(
       filename: options.filename ?? "taxcalc-export.zip",
       status: errors.length > 0 ? "partial" : "success",
       errorMessage: errors.length > 0 ? errors.slice(0, 5).join("; ") : null,
-      totalClients: incomingCodes.length,
+      totalClients: clients.size,
       clientsAdded,
       clientsUpdated,
-      clientsRemoved,
+      clientsRemoved: 0,
       saReturnsCount,
       ctReturnsCount,
       accountsPeriodsCount,
@@ -636,5 +621,5 @@ export async function runImport(
     });
   } catch (_) {}
 
-  return { clientsAdded, clientsUpdated, clientsRemoved, saReturnsCount, ctReturnsCount, accountsPeriodsCount, errors };
+  return { clientsAdded, clientsUpdated, saReturnsCount, ctReturnsCount, accountsPeriodsCount, errors };
 }

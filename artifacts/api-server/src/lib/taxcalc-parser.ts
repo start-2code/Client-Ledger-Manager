@@ -441,25 +441,42 @@ function handleDb10(rows: Record<string, unknown>[], clients: Map<string, Client
   }
 }
 
-// DB#11 uses positional mapping: [0]=code,[1]=type,[2]=name,[3]=mgmt_flag,[4]=mgmt_fee,[5]=other_flag,[6]=other_fee,[7]=total_fee,[8-13]=records
+// DB#11 uses a sparse left-packed format. The Nanotax export does NOT use fixed column
+// positions matching the header row. Instead, each row contains only its non-null values
+// left-packed after the client code. The last 2 non-null values are always client type
+// and client name. Any values preceding them are fee fields in this order:
+//   mgmt_flag, mgmt_fee, total_fee [, records_annual, q1, q1r, q2, q3, q4]
+// Clients with no fee data:      [code, type, name]
+// Clients with mgmt accounts:    [code, mgmt_flag, mgmt_fee, total_fee, type, name]
 function handleDb11(rawRows: unknown[][], clients: Map<string, ClientRecord>) {
   for (const row of rawRows) {
     const code = str(row[0]);
     if (!code) continue;
     const c = ensureClient(clients, code);
-    if (!c.type) c.type = str(row[1]) ?? undefined;
-    if (!c.name) c.name = str(row[2]) ?? undefined;
-    c.fees["managementAccountsFlag"] = str(row[3]) ?? c.fees["managementAccountsFlag"];
-    c.fees["managementAccountsFee"] = num(row[4]) ?? c.fees["managementAccountsFee"];
-    c.fees["otherFlag"] = str(row[5]) ?? c.fees["otherFlag"];
-    c.fees["otherFee"] = num(row[6]) ?? c.fees["otherFee"];
-    c.fees["totalFee"] = num(row[7]) ?? c.fees["totalFee"];
-    c.fees["recordsReceivedAnnual"] = excelDateToISO(row[8]) ?? str(row[8]) ?? c.fees["recordsReceivedAnnual"];
-    c.fees["recordsReceivedQ1"] = excelDateToISO(row[9]) ?? str(row[9]) ?? c.fees["recordsReceivedQ1"];
-    c.fees["recordsReceivedQ1Revised"] = excelDateToISO(row[10]) ?? str(row[10]) ?? c.fees["recordsReceivedQ1Revised"];
-    c.fees["recordsReceivedQ2"] = excelDateToISO(row[11]) ?? str(row[11]) ?? c.fees["recordsReceivedQ2"];
-    c.fees["recordsReceivedQ3"] = excelDateToISO(row[12]) ?? str(row[12]) ?? c.fees["recordsReceivedQ3"];
-    c.fees["recordsReceivedQ4"] = excelDateToISO(row[13]) ?? str(row[13]) ?? c.fees["recordsReceivedQ4"];
+
+    // Collect non-null values after the code
+    const nonNull = (row as unknown[]).slice(1)
+      .map((v, i) => ({ i, v }))
+      .filter(x => x.v !== null);
+    if (nonNull.length === 0) continue;
+
+    // Last 2 non-null entries are always type and name
+    const nameIdx  = nonNull.length - 1;
+    const typeIdx  = nonNull.length - 2;
+    if (!c.name) c.name = str(nonNull[nameIdx].v) ?? undefined;
+    if (nonNull.length >= 2 && !c.type) c.type = str(nonNull[typeIdx].v) ?? undefined;
+
+    // Preceding non-null entries are fee fields: mgmt_flag, mgmt_fee, total_fee, then records
+    const feeEntries = nonNull.slice(0, nonNull.length >= 2 ? -2 : -1);
+    if (feeEntries.length >= 1) c.fees["managementAccountsFlag"] = str(feeEntries[0].v) ?? c.fees["managementAccountsFlag"];
+    if (feeEntries.length >= 2) c.fees["managementAccountsFee"] = num(feeEntries[1].v) ?? c.fees["managementAccountsFee"];
+    if (feeEntries.length >= 3) c.fees["totalFee"] = num(feeEntries[2].v) ?? c.fees["totalFee"];
+    if (feeEntries.length >= 4) c.fees["recordsReceivedAnnual"] = excelDateToISO(feeEntries[3].v) ?? str(feeEntries[3].v) ?? c.fees["recordsReceivedAnnual"];
+    if (feeEntries.length >= 5) c.fees["recordsReceivedQ1"] = excelDateToISO(feeEntries[4].v) ?? str(feeEntries[4].v) ?? c.fees["recordsReceivedQ1"];
+    if (feeEntries.length >= 6) c.fees["recordsReceivedQ1Revised"] = excelDateToISO(feeEntries[5].v) ?? str(feeEntries[5].v) ?? c.fees["recordsReceivedQ1Revised"];
+    if (feeEntries.length >= 7) c.fees["recordsReceivedQ2"] = excelDateToISO(feeEntries[6].v) ?? str(feeEntries[6].v) ?? c.fees["recordsReceivedQ2"];
+    if (feeEntries.length >= 8) c.fees["recordsReceivedQ3"] = excelDateToISO(feeEntries[7].v) ?? str(feeEntries[7].v) ?? c.fees["recordsReceivedQ3"];
+    if (feeEntries.length >= 9) c.fees["recordsReceivedQ4"] = excelDateToISO(feeEntries[8].v) ?? str(feeEntries[8].v) ?? c.fees["recordsReceivedQ4"];
   }
 }
 

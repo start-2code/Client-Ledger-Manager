@@ -838,22 +838,33 @@ export const ImportPreviewResponse = zod.object({
 });
 
 /**
- * @summary Run a TaxCalc ZIP import
+ * @summary Start a TaxCalc ZIP import (async — returns batchId immediately)
  */
 export const ImportRunBody = zod.object({
   file: zod.instanceof(File).optional(),
 });
 
-export const ImportRunResponse = zod.object({
-  success: zod.boolean(),
-  clientsAdded: zod.number().optional(),
-  clientsUpdated: zod.number().optional(),
-  clientsRemoved: zod.number().optional(),
-  saReturnsCount: zod.number().optional(),
-  ctReturnsCount: zod.number().optional(),
-  accountsPeriodsCount: zod.number().optional(),
-  errors: zod.array(zod.string()).optional(),
-  parseErrors: zod.array(zod.string()).optional(),
+/**
+ * @summary Poll the status of an import batch
+ */
+export const ImportStatusParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ImportStatusResponse = zod.object({
+  id: zod.number(),
+  importedAt: zod.coerce.date(),
+  importedBy: zod.string().nullish(),
+  filename: zod.string().nullish(),
+  status: zod.string().nullish(),
+  errorMessage: zod.string().nullish(),
+  totalClients: zod.number().nullish(),
+  clientsAdded: zod.number().nullish(),
+  clientsUpdated: zod.number().nullish(),
+  clientsRemoved: zod.number().nullish(),
+  saReturnsCount: zod.number().nullish(),
+  ctReturnsCount: zod.number().nullish(),
+  accountsPeriodsCount: zod.number().nullish(),
 });
 
 /**

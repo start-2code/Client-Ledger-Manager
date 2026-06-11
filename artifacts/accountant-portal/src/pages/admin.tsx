@@ -14,11 +14,12 @@ import {
   getListDropdownOptionsQueryKey,
   useImportPreview,
   useImportRun,
+  useImportStatus,
   useImportHistory,
   getImportHistoryQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ImportPreview, ImportResult, ImportBatch } from "@workspace/api-client-react";
+import type { ImportPreview, ImportBatch } from "@workspace/api-client-react";
 import { format } from "date-fns";
 
 const CATEGORIES = [
@@ -145,12 +146,14 @@ function CategoryPanel({ category, description }: { category: string; descriptio
   );
 }
 
+const DONE_STATUSES = new Set(["success", "partial", "error"]);
+
 function ImportPanel() {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
-  const [result, setResult] = useState<ImportResult | null>(null);
+  const [pendingBatchId, setPendingBatchId] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
 
   const previewMutation = useImportPreview();
@@ -158,10 +161,37 @@ function ImportPanel() {
   const { data: historyData, isLoading: historyLoading } = useImportHistory();
   const batches: ImportBatch[] = historyData?.batches ?? [];
 
+  // Poll the batch status while an import is running
+  const { data: batchStatus } = useImportStatus(pendingBatchId ?? 0, {
+    query: {
+      enabled: !!pendingBatchId,
+      refetchInterval: 2000,
+    } as any,
+  });
+
+  // When the batch finishes, refresh history and clear the pending ID
+  React.useEffect(() => {
+    if (!batchStatus) return;
+    if (DONE_STATUSES.has(batchStatus.status ?? "")) {
+      qc.invalidateQueries({ queryKey: getImportHistoryQueryKey() });
+      setPendingBatchId(null);
+      if (batchStatus.status === "success") {
+        toast.success(
+          `Import complete — ${batchStatus.clientsAdded ?? 0} added, ${batchStatus.clientsUpdated ?? 0} updated, ${batchStatus.clientsRemoved ?? 0} removed`
+        );
+      } else if (batchStatus.status === "partial") {
+        toast.warning("Import completed with some errors — see history below");
+      } else {
+        toast.error(batchStatus.errorMessage ?? "Import failed");
+      }
+    }
+  }, [batchStatus?.status]);
+
+  const isRunning = !!pendingBatchId;
+
   const handleFileSelect = (file: File | null) => {
     setSelectedFile(file);
     setPreview(null);
-    setResult(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -174,7 +204,6 @@ function ImportPanel() {
 
   const handlePreview = async () => {
     if (!selectedFile) return;
-    setResult(null);
     try {
       const data = await previewMutation.mutateAsync({ data: { file: selectedFile as any } });
       setPreview(data);
@@ -187,14 +216,9 @@ function ImportPanel() {
     if (!selectedFile) return;
     try {
       const data = await runMutation.mutateAsync({ data: { file: selectedFile as any } });
-      setResult(data);
       setPreview(null);
-      qc.invalidateQueries({ queryKey: getImportHistoryQueryKey() });
-      if (data.errors && data.errors.length > 0) {
-        toast.warning(`Import completed with ${data.errors.length} error(s)`);
-      } else {
-        toast.success(`Import complete — ${data.clientsAdded ?? 0} added, ${data.clientsUpdated ?? 0} updated, ${data.clientsRemoved ?? 0} removed`);
-      }
+      setPendingBatchId(data.batchId);
+      toast.info("Import started — this may take a few minutes…");
     } catch (err: any) {
       toast.error(err?.response?.data?.error ?? "Import failed");
     }
@@ -204,6 +228,8 @@ function ImportPanel() {
     success: "bg-emerald-100 text-emerald-700 border-emerald-200",
     partial: "bg-amber-100 text-amber-700 border-amber-200",
     error: "bg-red-100 text-red-700 border-red-200",
+    running: "bg-blue-100 text-blue-700 border-blue-200",
+    pending: "bg-gray-100 text-gray-700 border-gray-200",
   };
 
   return (
@@ -263,11 +289,11 @@ function ImportPanel() {
               </Button>
               <Button
                 onClick={handleRun}
-                disabled={runMutation.isPending}
+                disabled={runMutation.isPending || isRunning}
                 className="flex-1"
               >
-                {runMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                Run Import
+                {(runMutation.isPending || isRunning) ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                {isRunning ? "Importing…" : "Run Import"}
               </Button>
             </div>
           )}
@@ -332,42 +358,22 @@ function ImportPanel() {
         </Card>
       )}
 
-      {/* Import result */}
-      {result && (
+      {/* Running progress indicator */}
+      {isRunning && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              {result.errors && result.errors.length > 0
-                ? <AlertCircle className="h-5 w-5 text-amber-500" />
-                : <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-              Import {result.errors && result.errors.length > 0 ? "Completed with Warnings" : "Successful"}
+              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+              Import in Progress
             </CardTitle>
+            <CardDescription>
+              Processing your TaxCalc export — this typically takes 2–5 minutes. You can navigate away and come back; the import will continue in the background.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-xl font-bold text-emerald-600">+{result.clientsAdded ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Added</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xl font-bold text-blue-600">~{result.clientsUpdated ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Updated</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xl font-bold text-amber-600">-{result.clientsRemoved ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Removed</p>
-              </div>
+            <div className="text-sm text-muted-foreground">
+              Status: <span className="font-medium text-foreground">{batchStatus?.status ?? "pending"}</span>
             </div>
-            {result.errors && result.errors.length > 0 && (
-              <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
-                <p className="text-sm font-medium text-amber-800">Row-level errors ({result.errors.length}):</p>
-                <ul className="mt-2 space-y-1">
-                  {result.errors.slice(0, 10).map((e, i) => (
-                    <li key={i} className="text-xs text-amber-700 font-mono">{e}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}

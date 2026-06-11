@@ -719,7 +719,7 @@ paths:
     post:
       operationId: importRun
       tags: [admin]
-      summary: Run a TaxCalc ZIP import
+      summary: Start a TaxCalc ZIP import (async — returns batchId immediately)
       requestBody:
         required: true
         content:
@@ -731,12 +731,33 @@ paths:
                   type: string
                   format: binary
       responses:
-        "200":
-          description: Import result
+        "202":
+          description: Import started — poll /admin/import/status/{id} for progress
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImportResult"
+                $ref: "#/components/schemas/ImportRunResponse"
+
+  /admin/import/status/{id}:
+    get:
+      operationId: importStatus
+      tags: [admin]
+      summary: Poll the status of an import batch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Current batch status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportBatch"
+        "404":
+          description: Batch not found
 
   /admin/import/history:
     get:
@@ -1584,6 +1605,13 @@ components:
           type: array
           items:
             type: string
+
+    ImportRunResponse:
+      type: object
+      required: [batchId]
+      properties:
+        batchId:
+          type: integer
 
     ImportBatch:
       type: object

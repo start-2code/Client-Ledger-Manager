@@ -548,6 +548,10 @@ export interface ImportResult {
   parseErrors?: string[];
 }
 
+export interface ImportRunResponse {
+  batchId: number;
+}
+
 export interface ImportBatch {
   id: number;
   importedAt: string;

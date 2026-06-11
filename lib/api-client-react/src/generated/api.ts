@@ -37,11 +37,12 @@ import type {
   GetDashboardOverdueTasksParams,
   GetDashboardRecentClientsParams,
   HealthStatus,
+  ImportBatch,
   ImportHistoryResponse,
   ImportPreview,
   ImportPreviewBody,
-  ImportResult,
   ImportRunBody,
+  ImportRunResponse,
   ListClientsParams,
   ListDropdownOptionsParams,
   ListFinancialInfoParams,
@@ -2826,7 +2827,7 @@ export const useImportPreview = <
 };
 
 /**
- * @summary Run a TaxCalc ZIP import
+ * @summary Start a TaxCalc ZIP import (async — returns batchId immediately)
  */
 export const getImportRunUrl = () => {
   return `/api/admin/import/run`;
@@ -2835,13 +2836,13 @@ export const getImportRunUrl = () => {
 export const importRun = async (
   importRunBody: ImportRunBody,
   options?: RequestInit,
-): Promise<ImportResult> => {
+): Promise<ImportRunResponse> => {
   const formData = new FormData();
   if (importRunBody.file !== undefined) {
     formData.append(`file`, importRunBody.file);
   }
 
-  return customFetch<ImportResult>(getImportRunUrl(), {
+  return customFetch<ImportRunResponse>(getImportRunUrl(), {
     ...options,
     method: "POST",
     body: formData,
@@ -2893,7 +2894,7 @@ export type ImportRunMutationBody = BodyType<ImportRunBody>;
 export type ImportRunMutationError = ErrorType<unknown>;
 
 /**
- * @summary Run a TaxCalc ZIP import
+ * @summary Start a TaxCalc ZIP import (async — returns batchId immediately)
  */
 export const useImportRun = <
   TError = ErrorType<unknown>,
@@ -2914,6 +2915,93 @@ export const useImportRun = <
 > => {
   return useMutation(getImportRunMutationOptions(options));
 };
+
+/**
+ * @summary Poll the status of an import batch
+ */
+export const getImportStatusUrl = (id: number) => {
+  return `/api/admin/import/status/${id}`;
+};
+
+export const importStatus = async (
+  id: number,
+  options?: RequestInit,
+): Promise<ImportBatch> => {
+  return customFetch<ImportBatch>(getImportStatusUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getImportStatusQueryKey = (id: number) => {
+  return [`/api/admin/import/status/${id}`] as const;
+};
+
+export const getImportStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof importStatus>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof importStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getImportStatusQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof importStatus>>> = ({
+    signal,
+  }) => importStatus(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof importStatus>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ImportStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof importStatus>>
+>;
+export type ImportStatusQueryError = ErrorType<void>;
+
+/**
+ * @summary Poll the status of an import batch
+ */
+
+export function useImportStatus<
+  TData = Awaited<ReturnType<typeof importStatus>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof importStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getImportStatusQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get import batch history

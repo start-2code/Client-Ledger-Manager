@@ -28,6 +28,7 @@ import type {
   CompaniesHouseResponse,
   CtReturnList,
   DashboardSummary,
+  DashboardTimeline,
   DropdownOption,
   DropdownOptionInput,
   DropdownOptionList,
@@ -1989,6 +1990,81 @@ export function useGetDashboardOverdueTasks<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetDashboardOverdueTasksQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get all timeline and compliance widgets for the dashboard
+ */
+export const getGetDashboardTimelineUrl = () => {
+  return `/api/dashboard/timeline`;
+};
+
+export const getDashboardTimeline = async (
+  options?: RequestInit,
+): Promise<DashboardTimeline> => {
+  return customFetch<DashboardTimeline>(getGetDashboardTimelineUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDashboardTimelineQueryKey = () => {
+  return [`/api/dashboard/timeline`] as const;
+};
+
+export const getGetDashboardTimelineQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDashboardTimeline>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardTimeline>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDashboardTimelineQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDashboardTimeline>>
+  > = ({ signal }) => getDashboardTimeline({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardTimeline>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDashboardTimelineQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDashboardTimeline>>
+>;
+export type GetDashboardTimelineQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all timeline and compliance widgets for the dashboard
+ */
+
+export function useGetDashboardTimeline<
+  TData = Awaited<ReturnType<typeof getDashboardTimeline>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardTimeline>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDashboardTimelineQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

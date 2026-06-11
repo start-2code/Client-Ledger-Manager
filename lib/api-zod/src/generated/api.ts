@@ -571,6 +571,81 @@ export const GetDashboardOverdueTasksResponse = zod.array(
 );
 
 /**
+ * @summary Get all timeline and compliance widgets for the dashboard
+ */
+export const GetDashboardTimelineResponse = zod.object({
+  ctDeadlines: zod.object({
+    within30: zod.number(),
+    within60: zod.number(),
+    within90: zod.number(),
+    items: zod.array(
+      zod.object({
+        clientId: zod.number().optional(),
+        clientCode: zod.string().nullish(),
+        clientName: zod.string().nullish(),
+        deadline: zod.string().optional(),
+      }),
+    ),
+  }),
+  yearEnds: zod.object({
+    hasData: zod.boolean(),
+    thisMonth: zod.number(),
+    nextMonth: zod.number(),
+  }),
+  ctOutstanding: zod.object({
+    total: zod.number(),
+    items: zod.array(
+      zod.object({
+        clientId: zod.number().optional(),
+        clientCode: zod.string().nullish(),
+        clientName: zod.string().nullish(),
+        periodEnd: zod.string().optional(),
+        monthsSinceEnd: zod.number().optional(),
+      }),
+    ),
+  }),
+  accountsStatus: zod.array(
+    zod.object({
+      status: zod.string().nullish(),
+      count: zod.number().optional(),
+      overdueCount: zod.number().optional(),
+    }),
+  ),
+  saByYear: zod.array(
+    zod.object({
+      taxYear: zod.string().optional(),
+      total: zod.number().optional(),
+      filed: zod.number().optional(),
+      notStarted: zod.number().optional(),
+    }),
+  ),
+  confirmationStatements: zod.object({
+    hasData: zod.boolean(),
+    dueSoon: zod.number(),
+    overdue: zod.number(),
+  }),
+  taskTimeline: zod.object({
+    overdue: zod.number(),
+    thisWeek: zod.number(),
+    nextWeek: zod.number(),
+    items: zod.array(
+      zod.object({
+        id: zod.number().optional(),
+        taskName: zod.string().optional(),
+        clientName: zod.string().optional(),
+        clientId: zod.number().nullish(),
+        dueDate: zod.string().nullish(),
+        band: zod.string().optional(),
+      }),
+    ),
+  }),
+  clientEngagement: zod.object({
+    hasData: zod.boolean(),
+    notEngagedCount: zod.number(),
+  }),
+});
+
+/**
  * @summary Get recently added clients
  */
 export const GetDashboardRecentClientsQueryParams = zod.object({

@@ -258,6 +258,97 @@ export interface TaxReturnList {
   limit: number;
 }
 
+export interface CtDeadlineItem {
+  clientId?: number;
+  /** @nullable */
+  clientCode?: string | null;
+  /** @nullable */
+  clientName?: string | null;
+  deadline?: string;
+}
+
+export interface CtOutstandingItem {
+  clientId?: number;
+  /** @nullable */
+  clientCode?: string | null;
+  /** @nullable */
+  clientName?: string | null;
+  periodEnd?: string;
+  monthsSinceEnd?: number;
+}
+
+export interface AccountsStatusItem {
+  /** @nullable */
+  status?: string | null;
+  count?: number;
+  overdueCount?: number;
+}
+
+export interface SaByYearItem {
+  taxYear?: string;
+  total?: number;
+  filed?: number;
+  notStarted?: number;
+}
+
+export interface TaskTimelineItem {
+  id?: number;
+  taskName?: string;
+  clientName?: string;
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  dueDate?: string | null;
+  band?: string;
+}
+
+export type DashboardTimelineCtDeadlines = {
+  within30: number;
+  within60: number;
+  within90: number;
+  items: CtDeadlineItem[];
+};
+
+export type DashboardTimelineYearEnds = {
+  hasData: boolean;
+  thisMonth: number;
+  nextMonth: number;
+};
+
+export type DashboardTimelineCtOutstanding = {
+  total: number;
+  items: CtOutstandingItem[];
+};
+
+export type DashboardTimelineConfirmationStatements = {
+  hasData: boolean;
+  dueSoon: number;
+  overdue: number;
+};
+
+export type DashboardTimelineTaskTimeline = {
+  overdue: number;
+  thisWeek: number;
+  nextWeek: number;
+  items: TaskTimelineItem[];
+};
+
+export type DashboardTimelineClientEngagement = {
+  hasData: boolean;
+  notEngagedCount: number;
+};
+
+export interface DashboardTimeline {
+  ctDeadlines: DashboardTimelineCtDeadlines;
+  yearEnds: DashboardTimelineYearEnds;
+  ctOutstanding: DashboardTimelineCtOutstanding;
+  accountsStatus: AccountsStatusItem[];
+  saByYear: SaByYearItem[];
+  confirmationStatements: DashboardTimelineConfirmationStatements;
+  taskTimeline: DashboardTimelineTaskTimeline;
+  clientEngagement: DashboardTimelineClientEngagement;
+}
+
 export interface StatusCount {
   label: string;
   count: number;

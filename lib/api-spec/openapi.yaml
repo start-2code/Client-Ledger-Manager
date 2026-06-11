@@ -516,6 +516,19 @@ paths:
                 items:
                   $ref: "#/components/schemas/Task"
 
+  /dashboard/timeline:
+    get:
+      operationId: getDashboardTimeline
+      tags: [dashboard]
+      summary: Get all timeline and compliance widgets for the dashboard
+      responses:
+        "200":
+          description: Dashboard timeline data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardTimeline"
+
   /dashboard/recent-clients:
     get:
       operationId: getDashboardRecentClients
@@ -1186,6 +1199,107 @@ components:
           type: integer
         limit:
           type: integer
+
+    CtDeadlineItem:
+      type: object
+      properties:
+        clientId: { type: integer }
+        clientCode: { type: ["string", "null"] }
+        clientName: { type: ["string", "null"] }
+        deadline: { type: string }
+
+    CtOutstandingItem:
+      type: object
+      properties:
+        clientId: { type: integer }
+        clientCode: { type: ["string", "null"] }
+        clientName: { type: ["string", "null"] }
+        periodEnd: { type: string }
+        monthsSinceEnd: { type: number }
+
+    AccountsStatusItem:
+      type: object
+      properties:
+        status: { type: ["string", "null"] }
+        count: { type: integer }
+        overdueCount: { type: integer }
+
+    SaByYearItem:
+      type: object
+      properties:
+        taxYear: { type: string }
+        total: { type: integer }
+        filed: { type: integer }
+        notStarted: { type: integer }
+
+    TaskTimelineItem:
+      type: object
+      properties:
+        id: { type: integer }
+        taskName: { type: string }
+        clientName: { type: string }
+        clientId: { type: ["integer", "null"] }
+        dueDate: { type: ["string", "null"] }
+        band: { type: string }
+
+    DashboardTimeline:
+      type: object
+      required: [ctDeadlines, yearEnds, ctOutstanding, accountsStatus, saByYear, confirmationStatements, taskTimeline, clientEngagement]
+      properties:
+        ctDeadlines:
+          type: object
+          required: [within30, within60, within90, items]
+          properties:
+            within30: { type: integer }
+            within60: { type: integer }
+            within90: { type: integer }
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/CtDeadlineItem" }
+        yearEnds:
+          type: object
+          required: [hasData, thisMonth, nextMonth]
+          properties:
+            hasData: { type: boolean }
+            thisMonth: { type: integer }
+            nextMonth: { type: integer }
+        ctOutstanding:
+          type: object
+          required: [total, items]
+          properties:
+            total: { type: integer }
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/CtOutstandingItem" }
+        accountsStatus:
+          type: array
+          items: { $ref: "#/components/schemas/AccountsStatusItem" }
+        saByYear:
+          type: array
+          items: { $ref: "#/components/schemas/SaByYearItem" }
+        confirmationStatements:
+          type: object
+          required: [hasData, dueSoon, overdue]
+          properties:
+            hasData: { type: boolean }
+            dueSoon: { type: integer }
+            overdue: { type: integer }
+        taskTimeline:
+          type: object
+          required: [overdue, thisWeek, nextWeek, items]
+          properties:
+            overdue: { type: integer }
+            thisWeek: { type: integer }
+            nextWeek: { type: integer }
+            items:
+              type: array
+              items: { $ref: "#/components/schemas/TaskTimelineItem" }
+        clientEngagement:
+          type: object
+          required: [hasData, notEngagedCount]
+          properties:
+            hasData: { type: boolean }
+            notEngagedCount: { type: integer }
 
     DashboardSummary:
       type: object

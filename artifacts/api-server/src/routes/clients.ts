@@ -80,16 +80,31 @@ router.get("/:id", async (req, res) => {
       return;
     }
 
-    const { tasksTable } = await import("@workspace/db");
-    const { financialInfoTable } = await import("@workspace/db");
-    const { taxReferencesTable } = await import("@workspace/db");
-    const { taxReturnsTable } = await import("@workspace/db");
+    const {
+      tasksTable,
+      financialInfoTable,
+      taxReferencesTable,
+      taxReturnsTable,
+      saReturnsTable,
+      ctReturnsTable,
+      accountsPeriodsTable,
+      clientFeesTable,
+      companiesHouseTable,
+      mtdItsaTable,
+    } = await import("@workspace/db");
+    const { desc } = await import("drizzle-orm");
 
-    const [tasks, [financialInfo], [taxReference], [taxReturn]] = await Promise.all([
+    const [tasks, [financialInfo], [taxReference], [taxReturn], saReturns, [ctReturn], [accountsPeriod], [fees], [companiesHouse], [mtdItsa]] = await Promise.all([
       db.select().from(tasksTable).where(eq(tasksTable.clientId, id)).orderBy(tasksTable.dueDate),
       db.select().from(financialInfoTable).where(eq(financialInfoTable.clientId, id)),
       db.select().from(taxReferencesTable).where(eq(taxReferencesTable.clientId, id)),
       db.select().from(taxReturnsTable).where(eq(taxReturnsTable.clientId, id)),
+      db.select().from(saReturnsTable).where(eq(saReturnsTable.clientId, id)).orderBy(desc(saReturnsTable.taxYear), saReturnsTable.returnType),
+      db.select().from(ctReturnsTable).where(eq(ctReturnsTable.clientId, id)),
+      db.select().from(accountsPeriodsTable).where(eq(accountsPeriodsTable.clientId, id)),
+      db.select().from(clientFeesTable).where(eq(clientFeesTable.clientId, id)),
+      db.select().from(companiesHouseTable).where(eq(companiesHouseTable.clientId, id)),
+      db.select().from(mtdItsaTable).where(eq(mtdItsaTable.clientId, id)),
     ]);
 
     const today = new Date().toISOString().split("T")[0];
@@ -104,6 +119,12 @@ router.get("/:id", async (req, res) => {
       financialInfo: financialInfo ?? null,
       taxReference: taxReference ?? null,
       taxReturn: taxReturn ?? null,
+      saReturns,
+      ctReturn: ctReturn ?? null,
+      accountsPeriod: accountsPeriod ?? null,
+      fees: fees ?? null,
+      companiesHouse: companiesHouse ?? null,
+      mtdItsa: mtdItsa ?? null,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get client");

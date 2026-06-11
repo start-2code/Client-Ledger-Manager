@@ -315,6 +315,270 @@ export interface AiChatRequest {
   history?: AiChatMessage[];
 }
 
+export interface SaReturn {
+  id: number;
+  clientId: number;
+  /** @nullable */
+  clientCode?: string | null;
+  taxYear: string;
+  returnType: string;
+  /** @nullable */
+  returnStatus?: string | null;
+  /** @nullable */
+  returnFiledSuccessfully?: boolean | null;
+  /** @nullable */
+  returnLocked?: boolean | null;
+  /** @nullable */
+  dateFiledToHmrc?: string | null;
+  /** @nullable */
+  totalTaxDue?: string | null;
+  /** @nullable */
+  hasRepayment?: boolean | null;
+  /** @nullable */
+  repaymentAmount?: string | null;
+  /** @nullable */
+  totalIncome?: string | null;
+  /** @nullable */
+  totalEmploymentIncome?: string | null;
+  /** @nullable */
+  totalSelfEmploymentIncome?: string | null;
+  /** @nullable */
+  totalCapitalGains?: string | null;
+  /** @nullable */
+  hasUkProperty?: boolean | null;
+  /** @nullable */
+  hasForeignPages?: boolean | null;
+  /** @nullable */
+  hasCapitalGains?: boolean | null;
+  /** @nullable */
+  poaThisYearJan?: string | null;
+  /** @nullable */
+  poaThisYearJul?: string | null;
+}
+
+export interface SaReturnList {
+  saReturns: SaReturn[];
+  total?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface CtReturn {
+  id: number;
+  clientId: number;
+  /** @nullable */
+  ctPeriodStart?: string | null;
+  /** @nullable */
+  ctPeriodEnd?: string | null;
+  /** @nullable */
+  ctPaymentDeadline?: string | null;
+  /** @nullable */
+  companyTurnover?: string | null;
+  /** @nullable */
+  tradingProfits?: string | null;
+  /** @nullable */
+  profitsChargeableToCt?: string | null;
+  /** @nullable */
+  corporationTax?: string | null;
+  /** @nullable */
+  corporationTaxOutstanding?: string | null;
+  /** @nullable */
+  corporationTaxOverpaid?: string | null;
+  /** @nullable */
+  returnFiledSuccessfully?: boolean | null;
+  /** @nullable */
+  returnLocked?: boolean | null;
+  /** @nullable */
+  hasRepayment?: boolean | null;
+}
+
+export interface CtReturnList {
+  ctReturns: CtReturn[];
+  total?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface AccountsPeriod {
+  id: number;
+  clientId: number;
+  /** @nullable */
+  periodStart?: string | null;
+  /** @nullable */
+  periodEnd?: string | null;
+  /** @nullable */
+  accountsStatus?: string | null;
+  /** @nullable */
+  periodLocked?: boolean | null;
+  /** @nullable */
+  accountingStandard?: string | null;
+  /** @nullable */
+  averageEmployees?: string | null;
+}
+
+export interface AccountsPeriodList {
+  accountsPeriods: AccountsPeriod[];
+  total?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface ClientFees {
+  id: number;
+  clientId: number;
+  /** @nullable */
+  annualAccountsFlag?: boolean | null;
+  /** @nullable */
+  annualAccountsFee?: string | null;
+  /** @nullable */
+  taxReturnFlag?: boolean | null;
+  /** @nullable */
+  taxReturnFee?: string | null;
+  /** @nullable */
+  auditFlag?: boolean | null;
+  /** @nullable */
+  auditFee?: string | null;
+  /** @nullable */
+  bookkeepingFlag?: boolean | null;
+  /** @nullable */
+  bookkeepingFee?: string | null;
+  /** @nullable */
+  vatReturnsFlag?: boolean | null;
+  /** @nullable */
+  vatReturnsFee?: string | null;
+  /** @nullable */
+  payrollFlag?: boolean | null;
+  /** @nullable */
+  payrollFee?: string | null;
+  /** @nullable */
+  consultancyFlag?: boolean | null;
+  /** @nullable */
+  consultancyFee?: string | null;
+  /** @nullable */
+  cashflowFlag?: boolean | null;
+  /** @nullable */
+  cashflowFee?: string | null;
+  /** @nullable */
+  managementAccountsFlag?: boolean | null;
+  /** @nullable */
+  managementAccountsFee?: string | null;
+  /** @nullable */
+  companySecretarialFlag?: boolean | null;
+  /** @nullable */
+  companySecretarialFee?: string | null;
+  /** @nullable */
+  otherFlag?: boolean | null;
+  /** @nullable */
+  otherFee?: string | null;
+  /** @nullable */
+  totalFee?: string | null;
+}
+
+export interface ClientFeesResponse {
+  fees?: ClientFees | null;
+}
+
+export interface CompaniesHouse {
+  id: number;
+  clientId: number;
+  /** @nullable */
+  cs01?: string | null;
+  /** @nullable */
+  sh01?: string | null;
+  /** @nullable */
+  mtd2026Q1?: string | null;
+  /** @nullable */
+  mtd2026Q2?: string | null;
+  /** @nullable */
+  mtd2026Q3?: string | null;
+  /** @nullable */
+  mtd2026Q4?: string | null;
+  /** @nullable */
+  mtd2027Q1?: string | null;
+  /** @nullable */
+  mtd2027Q2?: string | null;
+  /** @nullable */
+  mtd2027Q3?: string | null;
+  /** @nullable */
+  mtd2027Q4?: string | null;
+}
+
+export interface CompaniesHouseResponse {
+  companiesHouse?: CompaniesHouse | null;
+}
+
+export interface MtdItsa {
+  id: number;
+  clientId: number;
+  /** @nullable */
+  totalQualifyingIncome?: string | null;
+  /** @nullable */
+  annualisedIncomeSelfEmployment?: string | null;
+  /** @nullable */
+  seAccountingPeriodNotAligned?: boolean | null;
+  /** @nullable */
+  pshipBasisPeriodNotAligned?: boolean | null;
+}
+
+export interface MtdItsaResponse {
+  mtdItsa?: MtdItsa | null;
+}
+
+export interface ImportPreview {
+  totalClients: number;
+  clientsToAdd: number;
+  clientsToUpdate: number;
+  clientsToRemove: number;
+  saReturnsCount?: number;
+  ctReturnsCount?: number;
+  accountsPeriodsCount?: number;
+  fileCount?: number;
+  parseErrors?: string[];
+}
+
+export interface ImportResult {
+  success: boolean;
+  clientsAdded?: number;
+  clientsUpdated?: number;
+  clientsRemoved?: number;
+  saReturnsCount?: number;
+  ctReturnsCount?: number;
+  accountsPeriodsCount?: number;
+  errors?: string[];
+  parseErrors?: string[];
+}
+
+export interface ImportBatch {
+  id: number;
+  importedAt: string;
+  /** @nullable */
+  importedBy?: string | null;
+  /** @nullable */
+  filename?: string | null;
+  /** @nullable */
+  status?: string | null;
+  /** @nullable */
+  errorMessage?: string | null;
+  /** @nullable */
+  totalClients?: number | null;
+  /** @nullable */
+  clientsAdded?: number | null;
+  /** @nullable */
+  clientsUpdated?: number | null;
+  /** @nullable */
+  clientsRemoved?: number | null;
+  /** @nullable */
+  saReturnsCount?: number | null;
+  /** @nullable */
+  ctReturnsCount?: number | null;
+  /** @nullable */
+  accountsPeriodsCount?: number | null;
+}
+
+export interface ImportHistoryResponse {
+  batches: ImportBatch[];
+}
+
 export type ListClientsParams = {
   search?: string;
   type?: string;
@@ -359,6 +623,24 @@ export type GetDashboardOverdueTasksParams = {
 
 export type GetDashboardRecentClientsParams = {
   limit?: number;
+};
+
+export type ListSaReturnsParams = {
+  clientId?: number;
+  taxYear?: string;
+  returnType?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type ImportPreviewBody = {
+  file?: Blob;
+};
+
+export type ImportRunBody = {
+  file?: Blob;
 };
 
 export type ListDropdownOptionsParams = {

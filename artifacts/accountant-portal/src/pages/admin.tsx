@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Check, X, Plus, Settings2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Trash2, Check, X, Plus, Settings2, Upload, History, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   useListDropdownOptions,
@@ -11,8 +12,14 @@ import {
   useUpdateDropdownOption,
   useDeleteDropdownOption,
   getListDropdownOptionsQueryKey,
+  useImportPreview,
+  useImportRun,
+  useImportHistory,
+  getImportHistoryQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import type { ImportPreview, ImportResult, ImportBatch } from "@workspace/api-client-react";
+import { format } from "date-fns";
 
 const CATEGORIES = [
   { key: "client_type", label: "Client Types", description: "Entity types used when creating or editing clients." },
@@ -101,21 +108,10 @@ function CategoryPanel({ category, description }: { category: string; descriptio
                     className="h-7 text-sm flex-1"
                     autoFocus
                   />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-green-600 hover:text-green-700 shrink-0"
-                    onClick={() => handleSaveEdit(opt.id)}
-                    disabled={update.isPending}
-                  >
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-green-600 hover:text-green-700 shrink-0" onClick={() => handleSaveEdit(opt.id)} disabled={update.isPending}>
                     <Check className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => setEditingId(null)}
-                  >
+                  <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEditingId(null)}>
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </>
@@ -123,24 +119,10 @@ function CategoryPanel({ category, description }: { category: string; descriptio
                 <>
                   <span className="flex-1 text-sm">{opt.value}</span>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
-                      onClick={() => {
-                        setEditingId(opt.id);
-                        setEditingValue(opt.value);
-                      }}
-                    >
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0" onClick={() => { setEditingId(opt.id); setEditingValue(opt.value); }}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
-                      onClick={() => handleDelete(opt.id, opt.value)}
-                      disabled={remove.isPending}
-                    >
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0" onClick={() => handleDelete(opt.id, opt.value)} disabled={remove.isPending}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -152,25 +134,284 @@ function CategoryPanel({ category, description }: { category: string; descriptio
       )}
 
       <div className="flex gap-2">
-        <Input
-          value={newValue}
-          onChange={(e) => setNewValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleAdd();
-          }}
-          placeholder="New option…"
-          className="h-9 text-sm"
-        />
-        <Button
-          onClick={handleAdd}
-          disabled={!newValue.trim() || create.isPending}
-          size="sm"
-          className="shrink-0"
-        >
+        <Input value={newValue} onChange={(e) => setNewValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }} placeholder="New option…" className="h-9 text-sm" />
+        <Button onClick={handleAdd} disabled={!newValue.trim() || create.isPending} size="sm" className="shrink-0">
           <Plus className="h-4 w-4 mr-1" />
           Add
         </Button>
       </div>
+    </div>
+  );
+}
+
+function ImportPanel() {
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [result, setResult] = useState<ImportResult | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const previewMutation = useImportPreview();
+  const runMutation = useImportRun();
+  const { data: historyData, isLoading: historyLoading } = useImportHistory();
+  const batches: ImportBatch[] = historyData?.batches ?? [];
+
+  const handleFileSelect = (file: File | null) => {
+    setSelectedFile(file);
+    setPreview(null);
+    setResult(null);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith(".zip")) handleFileSelect(file);
+    else toast.error("Please drop a ZIP file");
+  };
+
+  const handlePreview = async () => {
+    if (!selectedFile) return;
+    setResult(null);
+    try {
+      const data = await previewMutation.mutateAsync({ data: { file: selectedFile as any } });
+      setPreview(data);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error ?? "Preview failed");
+    }
+  };
+
+  const handleRun = async () => {
+    if (!selectedFile) return;
+    try {
+      const data = await runMutation.mutateAsync({ data: { file: selectedFile as any } });
+      setResult(data);
+      setPreview(null);
+      qc.invalidateQueries({ queryKey: getImportHistoryQueryKey() });
+      if (data.errors && data.errors.length > 0) {
+        toast.warning(`Import completed with ${data.errors.length} error(s)`);
+      } else {
+        toast.success(`Import complete — ${data.clientsAdded ?? 0} added, ${data.clientsUpdated ?? 0} updated, ${data.clientsRemoved ?? 0} removed`);
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error ?? "Import failed");
+    }
+  };
+
+  const statusColor: Record<string, string> = {
+    success: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    partial: "bg-amber-100 text-amber-700 border-amber-200",
+    error: "bg-red-100 text-red-700 border-red-200",
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* File drop zone */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">1. Select TaxCalc Export ZIP</CardTitle>
+          <CardDescription>
+            Export all client data from TaxCalc as a ZIP file, then upload it here. The import replaces all TaxCalc-sourced data (clients, SA returns, CT returns, financial info, fees, etc.) but never touches manually-entered tasks.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+              dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+            }`}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+            onClick={() => fileRef.current?.click()}
+          >
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".zip"
+              className="hidden"
+              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
+            />
+            {selectedFile ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm font-medium">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  {selectedFile.name}
+                </div>
+                <p className="text-xs text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB — click to change</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Upload className="h-8 w-8 mx-auto text-muted-foreground/50" />
+                <p className="text-sm font-medium">Drop your TaxCalc ZIP here</p>
+                <p className="text-xs text-muted-foreground">or click to browse</p>
+              </div>
+            )}
+          </div>
+
+          {selectedFile && (
+            <div className="flex gap-3 mt-4">
+              <Button
+                onClick={handlePreview}
+                variant="outline"
+                disabled={previewMutation.isPending}
+                className="flex-1"
+              >
+                {previewMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                Preview Changes
+              </Button>
+              <Button
+                onClick={handleRun}
+                disabled={runMutation.isPending}
+                className="flex-1"
+              >
+                {runMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                Run Import
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Preview result */}
+      {preview && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">2. Preview — What will change</CardTitle>
+            <CardDescription>Review the impact before running the import.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
+              <div className="rounded-lg border p-4 text-center">
+                <p className="text-2xl font-bold">{preview.totalClients}</p>
+                <p className="text-xs text-muted-foreground mt-1">Total clients</p>
+              </div>
+              <div className="rounded-lg border p-4 text-center bg-emerald-50 border-emerald-200">
+                <p className="text-2xl font-bold text-emerald-700">+{preview.clientsToAdd}</p>
+                <p className="text-xs text-muted-foreground mt-1">New</p>
+              </div>
+              <div className="rounded-lg border p-4 text-center bg-blue-50 border-blue-200">
+                <p className="text-2xl font-bold text-blue-700">~{preview.clientsToUpdate}</p>
+                <p className="text-xs text-muted-foreground mt-1">Updated</p>
+              </div>
+              <div className="rounded-lg border p-4 text-center bg-amber-50 border-amber-200">
+                <p className="text-2xl font-bold text-amber-700">-{preview.clientsToRemove}</p>
+                <p className="text-xs text-muted-foreground mt-1">Removed</p>
+              </div>
+              <div className="rounded-lg border p-4 text-center">
+                <p className="text-2xl font-bold">{preview.saReturnsCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground mt-1">SA returns</p>
+              </div>
+              <div className="rounded-lg border p-4 text-center">
+                <p className="text-2xl font-bold">{preview.ctReturnsCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground mt-1">CT returns</p>
+              </div>
+              <div className="rounded-lg border p-4 text-center">
+                <p className="text-2xl font-bold">{preview.fileCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground mt-1">Files parsed</p>
+              </div>
+            </div>
+            {preview.parseErrors && preview.parseErrors.length > 0 && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-medium text-amber-800 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  {preview.parseErrors.length} parse warning(s)
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {preview.parseErrors.slice(0, 5).map((e, i) => (
+                    <li key={i} className="text-xs text-amber-700 font-mono">{e}</li>
+                  ))}
+                  {preview.parseErrors.length > 5 && (
+                    <li className="text-xs text-amber-600">…and {preview.parseErrors.length - 5} more</li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Import result */}
+      {result && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              {result.errors && result.errors.length > 0
+                ? <AlertCircle className="h-5 w-5 text-amber-500" />
+                : <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+              Import {result.errors && result.errors.length > 0 ? "Completed with Warnings" : "Successful"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="text-center">
+                <p className="text-xl font-bold text-emerald-600">+{result.clientsAdded ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Added</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-blue-600">~{result.clientsUpdated ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Updated</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-bold text-amber-600">-{result.clientsRemoved ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Removed</p>
+              </div>
+            </div>
+            {result.errors && result.errors.length > 0 && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-medium text-amber-800">Row-level errors ({result.errors.length}):</p>
+                <ul className="mt-2 space-y-1">
+                  {result.errors.slice(0, 10).map((e, i) => (
+                    <li key={i} className="text-xs text-amber-700 font-mono">{e}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Import history */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Import History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {historyLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Loading…</p>
+          ) : batches.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No imports yet.</p>
+          ) : (
+            <div className="divide-y">
+              {batches.map((b) => (
+                <div key={b.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${statusColor[b.status ?? ""] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
+                        {b.status ?? "unknown"}
+                      </span>
+                      <span className="font-mono text-xs text-muted-foreground">{b.filename ?? "unknown"}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {b.importedAt ? format(new Date(b.importedAt), "d MMM yyyy, HH:mm") : ""}{" "}
+                      by {b.importedBy ?? "system"}
+                    </p>
+                  </div>
+                  <div className="flex gap-4 text-xs text-muted-foreground">
+                    {b.totalClients != null && <span>{b.totalClients} clients</span>}
+                    {b.clientsAdded != null && <span className="text-emerald-600">+{b.clientsAdded}</span>}
+                    {b.clientsUpdated != null && <span className="text-blue-600">~{b.clientsUpdated}</span>}
+                    {b.clientsRemoved != null && <span className="text-amber-600">-{b.clientsRemoved}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -185,19 +426,27 @@ export default function Admin() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Settings</h1>
           <p className="text-muted-foreground mt-1">
-            Manage the dropdown options that appear in forms across the portal.
+            Manage dropdown options and import client data from TaxCalc.
           </p>
         </div>
       </div>
 
-      <Tabs defaultValue="client_type">
+      <Tabs defaultValue="import">
         <TabsList className="mb-6 flex-wrap h-auto gap-1">
+          <TabsTrigger value="import">
+            <Upload className="h-3.5 w-3.5 mr-1.5" />
+            TaxCalc Import
+          </TabsTrigger>
           {CATEGORIES.map((cat) => (
             <TabsTrigger key={cat.key} value={cat.key}>
               {cat.label}
             </TabsTrigger>
           ))}
         </TabsList>
+
+        <TabsContent value="import">
+          <ImportPanel />
+        </TabsContent>
 
         {CATEGORIES.map((cat) => (
           <TabsContent key={cat.key} value={cat.key}>

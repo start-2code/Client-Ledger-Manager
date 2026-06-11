@@ -596,6 +596,290 @@ export const GetDashboardRecentClientsResponse = zod.array(
 );
 
 /**
+ * @summary List SA returns
+ */
+export const ListSaReturnsQueryParams = zod.object({
+  clientId: zod.coerce.number().optional(),
+  taxYear: zod.coerce.string().optional(),
+  returnType: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const ListSaReturnsResponse = zod.object({
+  saReturns: zod.array(
+    zod.object({
+      id: zod.number(),
+      clientId: zod.number(),
+      clientCode: zod.string().nullish(),
+      taxYear: zod.string(),
+      returnType: zod.string(),
+      returnStatus: zod.string().nullish(),
+      returnFiledSuccessfully: zod.boolean().nullish(),
+      returnLocked: zod.boolean().nullish(),
+      dateFiledToHmrc: zod.string().nullish(),
+      totalTaxDue: zod.string().nullish(),
+      hasRepayment: zod.boolean().nullish(),
+      repaymentAmount: zod.string().nullish(),
+      totalIncome: zod.string().nullish(),
+      totalEmploymentIncome: zod.string().nullish(),
+      totalSelfEmploymentIncome: zod.string().nullish(),
+      totalCapitalGains: zod.string().nullish(),
+      hasUkProperty: zod.boolean().nullish(),
+      hasForeignPages: zod.boolean().nullish(),
+      hasCapitalGains: zod.boolean().nullish(),
+      poaThisYearJan: zod.string().nullish(),
+      poaThisYearJul: zod.string().nullish(),
+    }),
+  ),
+  total: zod.number().optional(),
+  page: zod.number().optional(),
+  limit: zod.number().optional(),
+});
+
+/**
+ * @summary Get SA returns for a client
+ */
+export const GetSaReturnsForClientParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const GetSaReturnsForClientResponse = zod.object({
+  saReturns: zod.array(
+    zod.object({
+      id: zod.number(),
+      clientId: zod.number(),
+      clientCode: zod.string().nullish(),
+      taxYear: zod.string(),
+      returnType: zod.string(),
+      returnStatus: zod.string().nullish(),
+      returnFiledSuccessfully: zod.boolean().nullish(),
+      returnLocked: zod.boolean().nullish(),
+      dateFiledToHmrc: zod.string().nullish(),
+      totalTaxDue: zod.string().nullish(),
+      hasRepayment: zod.boolean().nullish(),
+      repaymentAmount: zod.string().nullish(),
+      totalIncome: zod.string().nullish(),
+      totalEmploymentIncome: zod.string().nullish(),
+      totalSelfEmploymentIncome: zod.string().nullish(),
+      totalCapitalGains: zod.string().nullish(),
+      hasUkProperty: zod.boolean().nullish(),
+      hasForeignPages: zod.boolean().nullish(),
+      hasCapitalGains: zod.boolean().nullish(),
+      poaThisYearJan: zod.string().nullish(),
+      poaThisYearJul: zod.string().nullish(),
+    }),
+  ),
+  total: zod.number().optional(),
+  page: zod.number().optional(),
+  limit: zod.number().optional(),
+});
+
+/**
+ * @summary Get CT returns for a client
+ */
+export const GetCtReturnsForClientParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const GetCtReturnsForClientResponse = zod.object({
+  ctReturns: zod.array(
+    zod.object({
+      id: zod.number(),
+      clientId: zod.number(),
+      ctPeriodStart: zod.string().nullish(),
+      ctPeriodEnd: zod.string().nullish(),
+      ctPaymentDeadline: zod.string().nullish(),
+      companyTurnover: zod.string().nullish(),
+      tradingProfits: zod.string().nullish(),
+      profitsChargeableToCt: zod.string().nullish(),
+      corporationTax: zod.string().nullish(),
+      corporationTaxOutstanding: zod.string().nullish(),
+      corporationTaxOverpaid: zod.string().nullish(),
+      returnFiledSuccessfully: zod.boolean().nullish(),
+      returnLocked: zod.boolean().nullish(),
+      hasRepayment: zod.boolean().nullish(),
+    }),
+  ),
+  total: zod.number().optional(),
+  page: zod.number().optional(),
+  limit: zod.number().optional(),
+});
+
+/**
+ * @summary Get accounts periods for a client
+ */
+export const GetAccountsPeriodsForClientParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const GetAccountsPeriodsForClientResponse = zod.object({
+  accountsPeriods: zod.array(
+    zod.object({
+      id: zod.number(),
+      clientId: zod.number(),
+      periodStart: zod.string().nullish(),
+      periodEnd: zod.string().nullish(),
+      accountsStatus: zod.string().nullish(),
+      periodLocked: zod.boolean().nullish(),
+      accountingStandard: zod.string().nullish(),
+      averageEmployees: zod.string().nullish(),
+    }),
+  ),
+  total: zod.number().optional(),
+  page: zod.number().optional(),
+  limit: zod.number().optional(),
+});
+
+/**
+ * @summary Get fees for a client
+ */
+export const GetClientFeesParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const GetClientFeesResponse = zod.object({
+  fees: zod
+    .object({
+      id: zod.number(),
+      clientId: zod.number(),
+      annualAccountsFlag: zod.boolean().nullish(),
+      annualAccountsFee: zod.string().nullish(),
+      taxReturnFlag: zod.boolean().nullish(),
+      taxReturnFee: zod.string().nullish(),
+      auditFlag: zod.boolean().nullish(),
+      auditFee: zod.string().nullish(),
+      bookkeepingFlag: zod.boolean().nullish(),
+      bookkeepingFee: zod.string().nullish(),
+      vatReturnsFlag: zod.boolean().nullish(),
+      vatReturnsFee: zod.string().nullish(),
+      payrollFlag: zod.boolean().nullish(),
+      payrollFee: zod.string().nullish(),
+      consultancyFlag: zod.boolean().nullish(),
+      consultancyFee: zod.string().nullish(),
+      cashflowFlag: zod.boolean().nullish(),
+      cashflowFee: zod.string().nullish(),
+      managementAccountsFlag: zod.boolean().nullish(),
+      managementAccountsFee: zod.string().nullish(),
+      companySecretarialFlag: zod.boolean().nullish(),
+      companySecretarialFee: zod.string().nullish(),
+      otherFlag: zod.boolean().nullish(),
+      otherFee: zod.string().nullish(),
+      totalFee: zod.string().nullish(),
+    })
+    .nullish(),
+});
+
+/**
+ * @summary Get Companies House data for a client
+ */
+export const GetCompaniesHouseParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const GetCompaniesHouseResponse = zod.object({
+  companiesHouse: zod
+    .object({
+      id: zod.number(),
+      clientId: zod.number(),
+      cs01: zod.string().nullish(),
+      sh01: zod.string().nullish(),
+      mtd2026Q1: zod.string().nullish(),
+      mtd2026Q2: zod.string().nullish(),
+      mtd2026Q3: zod.string().nullish(),
+      mtd2026Q4: zod.string().nullish(),
+      mtd2027Q1: zod.string().nullish(),
+      mtd2027Q2: zod.string().nullish(),
+      mtd2027Q3: zod.string().nullish(),
+      mtd2027Q4: zod.string().nullish(),
+    })
+    .nullish(),
+});
+
+/**
+ * @summary Get MTD ITSA data for a client
+ */
+export const GetMtdItsaParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const GetMtdItsaResponse = zod.object({
+  mtdItsa: zod
+    .object({
+      id: zod.number(),
+      clientId: zod.number(),
+      totalQualifyingIncome: zod.string().nullish(),
+      annualisedIncomeSelfEmployment: zod.string().nullish(),
+      seAccountingPeriodNotAligned: zod.boolean().nullish(),
+      pshipBasisPeriodNotAligned: zod.boolean().nullish(),
+    })
+    .nullish(),
+});
+
+/**
+ * @summary Preview a TaxCalc ZIP import
+ */
+export const ImportPreviewBody = zod.object({
+  file: zod.instanceof(File).optional(),
+});
+
+export const ImportPreviewResponse = zod.object({
+  totalClients: zod.number(),
+  clientsToAdd: zod.number(),
+  clientsToUpdate: zod.number(),
+  clientsToRemove: zod.number(),
+  saReturnsCount: zod.number().optional(),
+  ctReturnsCount: zod.number().optional(),
+  accountsPeriodsCount: zod.number().optional(),
+  fileCount: zod.number().optional(),
+  parseErrors: zod.array(zod.string()).optional(),
+});
+
+/**
+ * @summary Run a TaxCalc ZIP import
+ */
+export const ImportRunBody = zod.object({
+  file: zod.instanceof(File).optional(),
+});
+
+export const ImportRunResponse = zod.object({
+  success: zod.boolean(),
+  clientsAdded: zod.number().optional(),
+  clientsUpdated: zod.number().optional(),
+  clientsRemoved: zod.number().optional(),
+  saReturnsCount: zod.number().optional(),
+  ctReturnsCount: zod.number().optional(),
+  accountsPeriodsCount: zod.number().optional(),
+  errors: zod.array(zod.string()).optional(),
+  parseErrors: zod.array(zod.string()).optional(),
+});
+
+/**
+ * @summary Get import batch history
+ */
+export const ImportHistoryResponse = zod.object({
+  batches: zod.array(
+    zod.object({
+      id: zod.number(),
+      importedAt: zod.coerce.date(),
+      importedBy: zod.string().nullish(),
+      filename: zod.string().nullish(),
+      status: zod.string().nullish(),
+      errorMessage: zod.string().nullish(),
+      totalClients: zod.number().nullish(),
+      clientsAdded: zod.number().nullish(),
+      clientsUpdated: zod.number().nullish(),
+      clientsRemoved: zod.number().nullish(),
+      saReturnsCount: zod.number().nullish(),
+      ctReturnsCount: zod.number().nullish(),
+      accountsPeriodsCount: zod.number().nullish(),
+    }),
+  ),
+});
+
+/**
  * @summary List dropdown options, optionally filtered by category
  */
 export const ListDropdownOptionsQueryParams = zod.object({

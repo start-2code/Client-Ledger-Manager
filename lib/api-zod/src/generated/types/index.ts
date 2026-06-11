@@ -6,14 +6,22 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./accountsPeriod";
+export * from "./accountsPeriodList";
 export * from "./aiChatMessage";
 export * from "./aiChatMessageRole";
 export * from "./aiChatRequest";
 export * from "./client";
 export * from "./clientDetail";
+export * from "./clientFees";
+export * from "./clientFeesResponse";
 export * from "./clientInput";
 export * from "./clientList";
 export * from "./clientUpdate";
+export * from "./companiesHouse";
+export * from "./companiesHouseResponse";
+export * from "./ctReturn";
+export * from "./ctReturnList";
 export * from "./dashboardSummary";
 export * from "./dropdownOption";
 export * from "./dropdownOptionInput";
@@ -24,12 +32,20 @@ export * from "./financialInfoUpdate";
 export * from "./getDashboardOverdueTasksParams";
 export * from "./getDashboardRecentClientsParams";
 export * from "./healthStatus";
+export * from "./importBatch";
+export * from "./importPreview";
+export * from "./importResult";
 export * from "./listClientsParams";
 export * from "./listDropdownOptionsParams";
 export * from "./listFinancialInfoParams";
+export * from "./listSaReturnsParams";
 export * from "./listTasksParams";
 export * from "./listTaxReferencesParams";
 export * from "./listTaxReturnsParams";
+export * from "./mtdItsa";
+export * from "./mtdItsaResponse";
+export * from "./saReturn";
+export * from "./saReturnList";
 export * from "./statusCount";
 export * from "./task";
 export * from "./taskInput";

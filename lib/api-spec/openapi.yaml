@@ -536,6 +536,221 @@ paths:
                 items:
                   $ref: "#/components/schemas/Client"
 
+  /sa-returns:
+    get:
+      operationId: listSaReturns
+      tags: [sa-returns]
+      summary: List SA returns
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: taxYear
+          in: query
+          schema:
+            type: string
+        - name: returnType
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of SA returns
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaReturnList"
+
+  /sa-returns/{clientId}:
+    get:
+      operationId: getSaReturnsForClient
+      tags: [sa-returns]
+      summary: Get SA returns for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: SA returns for client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaReturnList"
+
+  /ct-returns/{clientId}:
+    get:
+      operationId: getCtReturnsForClient
+      tags: [ct-returns]
+      summary: Get CT returns for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: CT returns for client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CtReturnList"
+
+  /accounts-periods/{clientId}:
+    get:
+      operationId: getAccountsPeriodsForClient
+      tags: [accounts-periods]
+      summary: Get accounts periods for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Accounts periods for client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountsPeriodList"
+
+  /client-fees/{clientId}:
+    get:
+      operationId: getClientFees
+      tags: [client-fees]
+      summary: Get fees for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Fee schedule for client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientFeesResponse"
+
+  /companies-house/{clientId}:
+    get:
+      operationId: getCompaniesHouse
+      tags: [companies-house]
+      summary: Get Companies House data for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Companies House data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompaniesHouseResponse"
+
+  /mtd-itsa/{clientId}:
+    get:
+      operationId: getMtdItsa
+      tags: [mtd-itsa]
+      summary: Get MTD ITSA data for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: MTD ITSA data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MtdItsaResponse"
+
+  /admin/import/preview:
+    post:
+      operationId: importPreview
+      tags: [admin]
+      summary: Preview a TaxCalc ZIP import
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Import preview summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportPreview"
+
+  /admin/import/run:
+    post:
+      operationId: importRun
+      tags: [admin]
+      summary: Run a TaxCalc ZIP import
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+
+  /admin/import/history:
+    get:
+      operationId: importHistory
+      tags: [admin]
+      summary: Get import batch history
+      responses:
+        "200":
+          description: Import history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportHistoryResponse"
+
   /admin/dropdown-options:
     get:
       operationId: listDropdownOptions
@@ -1049,3 +1264,364 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AiChatMessage"
+
+    SaReturn:
+      type: object
+      required: [id, clientId, taxYear, returnType]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientCode:
+          type: ["string", "null"]
+        taxYear:
+          type: string
+        returnType:
+          type: string
+        returnStatus:
+          type: ["string", "null"]
+        returnFiledSuccessfully:
+          type: ["boolean", "null"]
+        returnLocked:
+          type: ["boolean", "null"]
+        dateFiledToHmrc:
+          type: ["string", "null"]
+        totalTaxDue:
+          type: ["string", "null"]
+        hasRepayment:
+          type: ["boolean", "null"]
+        repaymentAmount:
+          type: ["string", "null"]
+        totalIncome:
+          type: ["string", "null"]
+        totalEmploymentIncome:
+          type: ["string", "null"]
+        totalSelfEmploymentIncome:
+          type: ["string", "null"]
+        totalCapitalGains:
+          type: ["string", "null"]
+        hasUkProperty:
+          type: ["boolean", "null"]
+        hasForeignPages:
+          type: ["boolean", "null"]
+        hasCapitalGains:
+          type: ["boolean", "null"]
+        poaThisYearJan:
+          type: ["string", "null"]
+        poaThisYearJul:
+          type: ["string", "null"]
+
+    SaReturnList:
+      type: object
+      required: [saReturns]
+      properties:
+        saReturns:
+          type: array
+          items:
+            $ref: "#/components/schemas/SaReturn"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    CtReturn:
+      type: object
+      required: [id, clientId]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        ctPeriodStart:
+          type: ["string", "null"]
+        ctPeriodEnd:
+          type: ["string", "null"]
+        ctPaymentDeadline:
+          type: ["string", "null"]
+        companyTurnover:
+          type: ["string", "null"]
+        tradingProfits:
+          type: ["string", "null"]
+        profitsChargeableToCt:
+          type: ["string", "null"]
+        corporationTax:
+          type: ["string", "null"]
+        corporationTaxOutstanding:
+          type: ["string", "null"]
+        corporationTaxOverpaid:
+          type: ["string", "null"]
+        returnFiledSuccessfully:
+          type: ["boolean", "null"]
+        returnLocked:
+          type: ["boolean", "null"]
+        hasRepayment:
+          type: ["boolean", "null"]
+
+    CtReturnList:
+      type: object
+      required: [ctReturns]
+      properties:
+        ctReturns:
+          type: array
+          items:
+            $ref: "#/components/schemas/CtReturn"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    AccountsPeriod:
+      type: object
+      required: [id, clientId]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        periodStart:
+          type: ["string", "null"]
+        periodEnd:
+          type: ["string", "null"]
+        accountsStatus:
+          type: ["string", "null"]
+        periodLocked:
+          type: ["boolean", "null"]
+        accountingStandard:
+          type: ["string", "null"]
+        averageEmployees:
+          type: ["string", "null"]
+
+    AccountsPeriodList:
+      type: object
+      required: [accountsPeriods]
+      properties:
+        accountsPeriods:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountsPeriod"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    ClientFees:
+      type: object
+      required: [id, clientId]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        annualAccountsFlag:
+          type: ["boolean", "null"]
+        annualAccountsFee:
+          type: ["string", "null"]
+        taxReturnFlag:
+          type: ["boolean", "null"]
+        taxReturnFee:
+          type: ["string", "null"]
+        auditFlag:
+          type: ["boolean", "null"]
+        auditFee:
+          type: ["string", "null"]
+        bookkeepingFlag:
+          type: ["boolean", "null"]
+        bookkeepingFee:
+          type: ["string", "null"]
+        vatReturnsFlag:
+          type: ["boolean", "null"]
+        vatReturnsFee:
+          type: ["string", "null"]
+        payrollFlag:
+          type: ["boolean", "null"]
+        payrollFee:
+          type: ["string", "null"]
+        consultancyFlag:
+          type: ["boolean", "null"]
+        consultancyFee:
+          type: ["string", "null"]
+        cashflowFlag:
+          type: ["boolean", "null"]
+        cashflowFee:
+          type: ["string", "null"]
+        managementAccountsFlag:
+          type: ["boolean", "null"]
+        managementAccountsFee:
+          type: ["string", "null"]
+        companySecretarialFlag:
+          type: ["boolean", "null"]
+        companySecretarialFee:
+          type: ["string", "null"]
+        otherFlag:
+          type: ["boolean", "null"]
+        otherFee:
+          type: ["string", "null"]
+        totalFee:
+          type: ["string", "null"]
+
+    ClientFeesResponse:
+      type: object
+      properties:
+        fees:
+          $ref: "#/components/schemas/ClientFees"
+          nullable: true
+
+    CompaniesHouse:
+      type: object
+      required: [id, clientId]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        cs01:
+          type: ["string", "null"]
+        sh01:
+          type: ["string", "null"]
+        mtd2026Q1:
+          type: ["string", "null"]
+        mtd2026Q2:
+          type: ["string", "null"]
+        mtd2026Q3:
+          type: ["string", "null"]
+        mtd2026Q4:
+          type: ["string", "null"]
+        mtd2027Q1:
+          type: ["string", "null"]
+        mtd2027Q2:
+          type: ["string", "null"]
+        mtd2027Q3:
+          type: ["string", "null"]
+        mtd2027Q4:
+          type: ["string", "null"]
+
+    CompaniesHouseResponse:
+      type: object
+      properties:
+        companiesHouse:
+          $ref: "#/components/schemas/CompaniesHouse"
+          nullable: true
+
+    MtdItsa:
+      type: object
+      required: [id, clientId]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        totalQualifyingIncome:
+          type: ["string", "null"]
+        annualisedIncomeSelfEmployment:
+          type: ["string", "null"]
+        seAccountingPeriodNotAligned:
+          type: ["boolean", "null"]
+        pshipBasisPeriodNotAligned:
+          type: ["boolean", "null"]
+
+    MtdItsaResponse:
+      type: object
+      properties:
+        mtdItsa:
+          $ref: "#/components/schemas/MtdItsa"
+          nullable: true
+
+    ImportPreview:
+      type: object
+      required: [totalClients, clientsToAdd, clientsToUpdate, clientsToRemove]
+      properties:
+        totalClients:
+          type: integer
+        clientsToAdd:
+          type: integer
+        clientsToUpdate:
+          type: integer
+        clientsToRemove:
+          type: integer
+        saReturnsCount:
+          type: integer
+        ctReturnsCount:
+          type: integer
+        accountsPeriodsCount:
+          type: integer
+        fileCount:
+          type: integer
+        parseErrors:
+          type: array
+          items:
+            type: string
+
+    ImportResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        clientsAdded:
+          type: integer
+        clientsUpdated:
+          type: integer
+        clientsRemoved:
+          type: integer
+        saReturnsCount:
+          type: integer
+        ctReturnsCount:
+          type: integer
+        accountsPeriodsCount:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+        parseErrors:
+          type: array
+          items:
+            type: string
+
+    ImportBatch:
+      type: object
+      required: [id, importedAt]
+      properties:
+        id:
+          type: integer
+        importedAt:
+          type: string
+          format: date-time
+        importedBy:
+          type: ["string", "null"]
+        filename:
+          type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+        errorMessage:
+          type: ["string", "null"]
+        totalClients:
+          type: ["integer", "null"]
+        clientsAdded:
+          type: ["integer", "null"]
+        clientsUpdated:
+          type: ["integer", "null"]
+        clientsRemoved:
+          type: ["integer", "null"]
+        saReturnsCount:
+          type: ["integer", "null"]
+        ctReturnsCount:
+          type: ["integer", "null"]
+        accountsPeriodsCount:
+          type: ["integer", "null"]
+
+    ImportHistoryResponse:
+      type: object
+      required: [batches]
+      properties:
+        batches:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportBatch"

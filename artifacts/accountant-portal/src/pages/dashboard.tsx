@@ -180,31 +180,33 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>SA Returns Status</CardTitle>
-            <CardDescription>Self Assessment overall progress</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {summary.taxReturnsByStatus?.map((stat, i) => (
-                <div key={i} className="flex items-center justify-between">
+      <Card className="lg:col-span-3">
+        <CardHeader>
+          <CardTitle>SA Returns Status</CardTitle>
+          <CardDescription>Self Assessment overall progress</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {summary.taxReturnsByStatus?.map((stat, i) => (
+              <Link key={i} href={`/tax-returns?status=${encodeURIComponent(stat.label)}`}>
+                <div className="flex items-center justify-between cursor-pointer hover:opacity-75 transition-opacity p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${
                       stat.label.includes("Filed") ? "bg-emerald-500" :
                       stat.label.includes("Progress") ? "bg-amber-500" : "bg-slate-300"
                     }`} />
-                    <span className="text-sm font-medium">{stat.label}</span>
+                    <span className="text-sm font-medium text-primary hover:underline">{stat.label}</span>
                   </div>
                   <span className="text-sm text-muted-foreground font-mono">{stat.count}</span>
                 </div>
-              ))}
-              {(!summary.taxReturnsByStatus || summary.taxReturnsByStatus.length === 0) && (
-                <p className="text-sm text-muted-foreground py-4 text-center">No data available</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </Link>
+            ))}
+            {(!summary.taxReturnsByStatus || summary.taxReturnsByStatus.length === 0) && (
+              <p className="text-sm text-muted-foreground py-4 text-center">No data available</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       </div>
 
       {/* ── Section heading ── */}

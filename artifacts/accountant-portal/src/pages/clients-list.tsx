@@ -22,6 +22,8 @@ import {
 import { ClientFormDialog } from "@/components/client-form-dialog";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { toast } from "sonner";
+import { useListDropdownOptions } from "@workspace/api-client-react";
+
 
 type ClientRow = {
   id: number;
@@ -41,6 +43,9 @@ export default function ClientsList() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState<string>("all");
   const [page, setPage] = useState(1);
+
+  const { data: dropdownData } = useListDropdownOptions({ category: "client_type" });
+  const clientTypeOptions = dropdownData?.options ?? [];
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editClient, setEditClient] = useState<ClientRow | null>(null);
@@ -109,13 +114,14 @@ export default function ClientsList() {
           <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Client Type" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="Limited Company">Limited Company</SelectItem>
-            <SelectItem value="Individual">Individual</SelectItem>
-            <SelectItem value="Partnership">Partnership</SelectItem>
-            <SelectItem value="Trust">Trust</SelectItem>
-          </SelectContent>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {clientTypeOptions.map((option) => (
+                <SelectItem key={option.id} value={option.value}>
+                  {option.value}
+                </SelectItem>
+              ))}
+            </SelectContent>
         </Select>
       </div>
 

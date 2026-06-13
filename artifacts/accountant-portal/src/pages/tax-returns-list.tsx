@@ -14,22 +14,34 @@ import { Search, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
-export default function TaxReturnsList() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string>("all");
-  const [page, setPage] = useState(1);
-  const queryClient = useQueryClient();
-
-  const { data: statusData } = useListDropdownOptions({ category: "sa_return_status" });
-  const saStatuses = statusData?.options.map((o) => o.value) ?? [];
-
-  const { data, isLoading } = useListTaxReturns({
-    search: search || undefined,
-    status: status !== "all" ? status : undefined,
-    page,
-    limit: 50
-  });
-
+  export default function TaxReturnsList() {
+    // Get initial status from URL query parameter
+    const initialStatus = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('status') || 'all';
+    
+    const [search, setSearch] = useState("");
+    const [status, setStatus] = useState<string>(initialStatus);
+    const [page, setPage] = useState(1);
+    const queryClient = useQueryClient();
+  
+    const { data: statusData } = useListDropdownOptions({ category: "sa_return_status" });
+    const saStatuses = statusData?.options.map((o) => o.value) ?? [];
+  
+    const { data, isLoading } = useListTaxReturns({
+      search: search || undefined,
+      status: status !== "all" ? status : undefined,
+      page,
+      limit: 50
+    });
+  
+    const updateTaxReturn = useUpdateTaxReturn();
+  
+    const handleStatusChange = (id: number, newStatus: string) => {
+      updateTaxReturn.mutate({ id, data: { taxReturnStatus: newStatus } }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListTaxReturnsQueryKey() });
+        }
+      });
+    };
   const updateTaxReturn = useUpdateTaxReturn();
 
   const handleStatusChange = (id: number, newStatus: string) => {

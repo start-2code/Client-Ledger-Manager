@@ -396,7 +396,7 @@ function ImportPanel() {
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground">
-              Status: <span className="font-medium text-foreground">{batchStatus?.status ?? "pending"}</span>
+              Status: <span className="font-medium text-foreground">running</span>
             </div>
           </CardContent>
         </Card>

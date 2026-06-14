@@ -73,9 +73,19 @@ async function bulkUpsert<T extends Record<string, any>>(
   conflictTarget: any,
   skipKeys: string[],
   chunkSize = 200,
+  directWriteAll = false,
 ): Promise<void> {
   if (rows.length === 0) return;
-  const set = makeExcludedSet(table, skipKeys);
+  // Child tables (tax_references, financial_info, etc.) are fully replaced on
+  // every import — use directWriteAll so nulls can clear previously-wrong values.
+  const directKeys = directWriteAll
+    ? new Set(
+        Object.keys(getTableColumns(table) as Record<string, unknown>).filter(
+          (k) => !skipKeys.includes(k),
+        ),
+      )
+    : new Set<string>();
+  const set = makeExcludedSet(table, skipKeys, directKeys);
   for (let i = 0; i < rows.length; i += chunkSize) {
     await db
       .insert(table)
@@ -617,19 +627,19 @@ export async function runImport(
 
   // ─── Phase 3: bulk upsert all child tables ────────────────────────────────
   try {
-    await bulkUpsert(taxReferencesTable, taxRefRows, taxReferencesTable.clientId, ["id", "clientId"]);
+    await bulkUpsert(taxReferencesTable, taxRefRows, taxReferencesTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
     errors.push(`TaxRefs bulk: ${e.message}`);
   }
 
   try {
-    await bulkUpsert(financialInfoTable, fiRows, financialInfoTable.clientId, ["id", "clientId"]);
+    await bulkUpsert(financialInfoTable, fiRows, financialInfoTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
     errors.push(`FinancialInfo bulk: ${e.message}`);
   }
 
   try {
-    await bulkUpsert(clientFeesTable, feesRows, clientFeesTable.clientId, ["id", "clientId"]);
+    await bulkUpsert(clientFeesTable, feesRows, clientFeesTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
     errors.push(`ClientFees bulk: ${e.message}`);
   }
@@ -640,6 +650,8 @@ export async function runImport(
       ctRows,
       [ctReturnsTable.clientId, ctReturnsTable.ctPeriodStart, ctReturnsTable.ctPeriodEnd],
       ["id", "clientId", "ctPeriodStart", "ctPeriodEnd"],
+      200,
+      true,
     );
   } catch (e: any) {
     errors.push(`CtReturns bulk: ${e.message}`);
@@ -651,19 +663,21 @@ export async function runImport(
       apRows,
       [accountsPeriodsTable.clientId, accountsPeriodsTable.periodStart, accountsPeriodsTable.periodEnd],
       ["id", "clientId", "periodStart", "periodEnd"],
+      200,
+      true,
     );
   } catch (e: any) {
     errors.push(`AccountsPeriods bulk: ${e.message}`);
   }
 
   try {
-    await bulkUpsert(companiesHouseTable, chRows, companiesHouseTable.clientId, ["id", "clientId"]);
+    await bulkUpsert(companiesHouseTable, chRows, companiesHouseTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
     errors.push(`CompaniesHouse bulk: ${e.message}`);
   }
 
   try {
-    await bulkUpsert(mtdItsaTable, mtdRows, mtdItsaTable.clientId, ["id", "clientId"]);
+    await bulkUpsert(mtdItsaTable, mtdRows, mtdItsaTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
     errors.push(`MtdItsa bulk: ${e.message}`);
   }

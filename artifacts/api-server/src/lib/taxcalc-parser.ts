@@ -261,6 +261,15 @@ function getDbNum(filename: string): number | null {
 }
 
 function parseXls(data: Buffer): Array<Record<string, unknown>> {
+  // Nanotax exports HTML files with an .xlsx extension. SheetJS does not count
+  // self-closing <td/> tags as cells, so blank columns get skipped and every
+  // subsequent value shifts left. Pre-process: expand <td.../> → <td...></td>.
+  const prefix = data.toString("utf8", 0, 20);
+  if (prefix.startsWith("<!") || prefix.startsWith("<h") || prefix.startsWith("<H")) {
+    const html = data.toString("utf8");
+    data = Buffer.from(html.replace(/<td([^>]*)\/>/gi, "<td$1></td>"), "utf8");
+  }
+
   const wb = XLSX.read(data, { type: "buffer" });
   const sheet = wb.Sheets[wb.SheetNames[0]];
   const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null }) as unknown[][];
@@ -993,16 +1002,6 @@ export function parseTaxCalcZip(zipBuffer: Buffer): ParseResult {
       }
 
       const rows = parseXls(entry.data);
-
-      if (dbNum === 6) {
-        // Save raw DB6 file to disk for inspection
-        require("fs").writeFileSync("/tmp/db6_debug.xlsx", entry.data);
-        // Also dump raw array (header: 1) for first 5 rows
-        const wb2 = require("xlsx").read(entry.data, { type: "buffer" });
-        const sh2 = wb2.Sheets[wb2.SheetNames[0]];
-        const raw2 = require("xlsx").utils.sheet_to_json(sh2, { header: 1, defval: null });
-        console.log("[DEBUG DB6 RAW ARRAY rows 0-5]", JSON.stringify(raw2.slice(0, 5)));
-      }
 
       switch (dbNum) {
         case 3: handleDb3(rows, clients); break;

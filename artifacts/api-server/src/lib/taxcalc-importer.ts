@@ -248,7 +248,8 @@ export async function runImport(
         .returning({ id: clientsTable.id, code: clientsTable.code });
       for (const r of returned) clientIdMap.set(r.code, r.id);
     } catch (e: any) {
-      errors.push(`Clients chunk ${i}: ${e.message}`);
+      const detail = e.cause?.message ?? e.message;
+      errors.push(`Clients chunk ${i}: ${detail}`);
     }
   }
 
@@ -629,19 +630,19 @@ export async function runImport(
   try {
     await bulkUpsert(taxReferencesTable, taxRefRows, taxReferencesTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
-    errors.push(`TaxRefs bulk: ${e.message}`);
+    errors.push(`TaxRefs bulk: ${e.cause?.message ?? e.message}`);
   }
 
   try {
     await bulkUpsert(financialInfoTable, fiRows, financialInfoTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
-    errors.push(`FinancialInfo bulk: ${e.message}`);
+    errors.push(`FinancialInfo bulk: ${e.cause?.message ?? e.message}`);
   }
 
   try {
     await bulkUpsert(clientFeesTable, feesRows, clientFeesTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
-    errors.push(`ClientFees bulk: ${e.message}`);
+    errors.push(`ClientFees bulk: ${e.cause?.message ?? e.message}`);
   }
 
   try {
@@ -654,7 +655,7 @@ export async function runImport(
       true,
     );
   } catch (e: any) {
-    errors.push(`CtReturns bulk: ${e.message}`);
+    errors.push(`CtReturns bulk: ${e.cause?.message ?? e.message}`);
   }
 
   try {
@@ -667,19 +668,19 @@ export async function runImport(
       true,
     );
   } catch (e: any) {
-    errors.push(`AccountsPeriods bulk: ${e.message}`);
+    errors.push(`AccountsPeriods bulk: ${e.cause?.message ?? e.message}`);
   }
 
   try {
     await bulkUpsert(companiesHouseTable, chRows, companiesHouseTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
-    errors.push(`CompaniesHouse bulk: ${e.message}`);
+    errors.push(`CompaniesHouse bulk: ${e.cause?.message ?? e.message}`);
   }
 
   try {
     await bulkUpsert(mtdItsaTable, mtdRows, mtdItsaTable.clientId, ["id", "clientId"], 200, true);
   } catch (e: any) {
-    errors.push(`MtdItsa bulk: ${e.message}`);
+    errors.push(`MtdItsa bulk: ${e.cause?.message ?? e.message}`);
   }
 
   // ─── Phase 4: SA returns — bulk delete then bulk insert ───────────────────
@@ -696,7 +697,7 @@ export async function runImport(
       await db.insert(saReturnsTable).values(saRows.slice(i, i + 500));
     }
   } catch (e: any) {
-    errors.push(`SaReturns bulk: ${e.message}`);
+    errors.push(`SaReturns bulk: ${e.cause?.message ?? e.message}`);
   }
 
   return {

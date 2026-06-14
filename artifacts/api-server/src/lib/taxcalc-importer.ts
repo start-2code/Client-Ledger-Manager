@@ -189,7 +189,12 @@ export async function runImport(
   }));
 
   const clientIdMap = new Map<string, number>();
-  const clientExcludedSet = makeExcludedSet(clientsTable, ["id", "code"]);
+  const clientExcludedSet = {
+    ...makeExcludedSet(clientsTable, ["id", "code"]),
+    // "Unknown" is a sentinel written when DB#11 is absent from the ZIP.
+    // Treat it the same as null so COALESCE preserves the real existing type.
+    type: sql.raw(`COALESCE(NULLIF(excluded.type, 'Unknown'), clients.type)`),
+  };
   for (let i = 0; i < clientRows.length; i += 200) {
     try {
       const returned = await db

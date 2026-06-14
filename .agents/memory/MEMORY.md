@@ -1,0 +1,1 @@
+- [Nanotax ZIP import quirks](nanotax-zip-import.md) — three compounding bugs fixed in the TaxCalc/Nanotax ZIP importer

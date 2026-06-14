@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -24,8 +24,8 @@ export const clientsTable = pgTable("clients", {
   friendlySalutation: text("friendly_salutation"),
   gender: text("gender"),
   maritalStatus: text("marital_status"),
-  dateOfBirth: text("date_of_birth"),
-  dateOfDeath: text("date_of_death"),
+  dateOfBirth: date("date_of_birth"),
+  dateOfDeath: date("date_of_death"),
   nationality: text("nationality"),
   countryOfResidence: text("country_of_residence"),
   // Business info
@@ -37,21 +37,21 @@ export const clientsTable = pgTable("clients", {
   industryType: text("industry_type"),
   enrolledForMtdVat: text("enrolled_for_mtd_vat"),
   // Company info
-  dateOfCommencement: text("date_of_commencement"),
-  dateOfCessation: text("date_of_cessation"),
+  dateOfCommencement: date("date_of_commencement"),
+  dateOfCessation: date("date_of_cessation"),
   companyType: text("company_type"),
   limitedLiabilityPartnership: boolean("limited_liability_partnership").default(false),
   countryOfIncorporation: text("country_of_incorporation"),
-  dateOfIncorporation: text("date_of_incorporation"),
+  dateOfIncorporation: date("date_of_incorporation"),
   tradingStatus: text("trading_status"),
   companyAuthenticationCode: text("company_authentication_code"),
   website: text("website"),
   isPropertyBusiness: boolean("is_property_business").default(false),
-  confirmationStatementDate: text("confirmation_statement_date"),
+  confirmationStatementDate: date("confirmation_statement_date"),
   // Practice info
   assignedOffice: text("assigned_office"),
   bookkeepingSoftware: text("bookkeeping_software"),
-  clientCreationDate: text("client_creation_date"),
+  clientCreationDate: date("client_creation_date"),
   archived: boolean("archived").default(false),
   amlStatus: text("aml_status"),
   paymentMethod: text("payment_method"),
@@ -60,15 +60,15 @@ export const clientsTable = pgTable("clients", {
   consentType: text("consent_type"),
   consentStatus: text("consent_status"),
   methodOfConsent: text("method_of_consent"),
-  dateOfConsent: text("date_of_consent"),
-  dateOfLatestEngagement: text("date_of_latest_engagement"),
-  dateOfClientLoss: text("date_of_client_loss"),
+  dateOfConsent: date("date_of_consent"),
+  dateOfLatestEngagement: date("date_of_latest_engagement"),
+  dateOfClientLoss: date("date_of_client_loss"),
   // Practice flags
   smartvaultFlag: text("smartvault_flag"),
   engagerFlag: text("engager_flag"),
   portfolioFlag: text("portfolio_flag"),
   status64_8: text("status_64_8"),
-  date64_8Completion: text("date_64_8_completion"),
+  date64_8Completion: date("date_64_8_completion"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

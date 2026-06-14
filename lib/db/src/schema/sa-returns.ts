@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, numeric, timestamp, boolean, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, numeric, timestamp, boolean, unique, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { clientsTable } from "./clients";
@@ -17,9 +17,9 @@ export const saReturnsTable = pgTable(
     returnStatus: text("return_status"),
     returnFiledSuccessfully: boolean("return_filed_successfully"),
     returnLocked: boolean("return_locked"),
-    dateFiledToHmrc: text("date_filed_to_hmrc"),
-    dateLastSaved: text("date_last_saved"),
-    dateLastStatusChange: text("date_last_status_change"),
+    dateFiledToHmrc: date("date_filed_to_hmrc"),
+    dateLastSaved: date("date_last_saved"),
+    dateLastStatusChange: date("date_last_status_change"),
     provisionalFields: boolean("provisional_fields"),
     // Income flags
     hasEmployment: boolean("has_employment"),

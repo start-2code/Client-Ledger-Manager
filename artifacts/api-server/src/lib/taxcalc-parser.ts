@@ -184,6 +184,11 @@ function excelDateToISO(val: unknown): string | null {
   if (typeof val === "string") {
     const trimmed = val.trim();
     if (trimmed === "" || trimmed === "No" || trimmed === "null") return null;
+    // Nanotax HTML exports use DD/MM/YYYY — reformat to YYYY-MM-DD so Postgres
+    // date columns accept the value and queries/sorts work correctly.
+    const dmyMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (dmyMatch) return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
+    // Already ISO (YYYY-MM-DD) or some other string — pass through.
     return trimmed;
   }
   if (typeof val === "number" && val > 25569 && val < 100000) {

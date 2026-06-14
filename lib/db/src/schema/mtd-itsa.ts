@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, timestamp, boolean, text, numeric } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, timestamp, boolean, text, numeric, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { clientsTable } from "./clients";
@@ -9,8 +9,8 @@ export const mtdItsaTable = pgTable("mtd_itsa", {
   id: serial("id").primaryKey(),
   clientId: integer("client_id").notNull().unique().references(() => clientsTable.id, { onDelete: "cascade" }),
   // MTD 26 submission info
-  dateOfLastSubmission26: text("date_of_last_submission_26"),
-  periodEndOfLastSubmission26: text("period_end_of_last_submission_26"),
+  dateOfLastSubmission26: date("date_of_last_submission_26"),
+  periodEndOfLastSubmission26: date("period_end_of_last_submission_26"),
   lastSubmissionSuccessful26: boolean("last_submission_successful_26"),
   // Qualifying income (annualised)
   qualifyingIncomeSelfEmployment: money("qualifying_income_self_employment"),

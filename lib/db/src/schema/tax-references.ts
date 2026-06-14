@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { clientsTable } from "./clients";
@@ -13,7 +13,7 @@ export const taxReferencesTable = pgTable("tax_references", {
   payeAccountsOfficeRef: text("paye_accounts_office_ref"),
   niNumber: text("ni_number"),
   companyRegNo: text("company_reg_no"),
-  dateOfIncorporation: text("date_of_incorporation"),
+  dateOfIncorporation: date("date_of_incorporation"),
   // Tax office
   taxOffice: text("tax_office"),
   taxOfficeTelephone: text("tax_office_telephone"),
@@ -24,8 +24,8 @@ export const taxReferencesTable = pgTable("tax_references", {
   taxOfficePostcode: text("tax_office_postcode"),
   // VAT
   vatRegNo: text("vat_reg_no"),
-  vatRegDate: text("vat_reg_date"),
-  vatDeRegistrationDate: text("vat_de_registration_date"),
+  vatRegDate: date("vat_reg_date"),
+  vatDeRegistrationDate: date("vat_de_registration_date"),
   vatPeriodEnd: text("vat_period_end"),
   vatScheme: text("vat_scheme"),
   vatFlatRateScheme: text("vat_flat_rate_scheme"),
@@ -34,13 +34,13 @@ export const taxReferencesTable = pgTable("tax_references", {
   enrolledForMtdIncomeTax: boolean("enrolled_for_mtd_income_tax").default(false),
   // AML & compliance
   amlStatus: text("aml_status"),
-  amlLastCheckDate: text("aml_last_check_date"),
+  amlLastCheckDate: date("aml_last_check_date"),
   p11dDispensation: text("p11d_dispensation"),
-  pensionAutoEnrolmentDate: text("pension_auto_enrolment_date"),
+  pensionAutoEnrolmentDate: date("pension_auto_enrolment_date"),
   constructionIndustryScheme: boolean("construction_industry_scheme").default(false),
   individualIsPscNotDirector: boolean("individual_is_psc_not_director").default(false),
   individualIsPscAndDirector: boolean("individual_is_psc_and_director").default(false),
-  vs01SubmissionDeadline: text("vs01_submission_deadline"),
+  vs01SubmissionDeadline: date("vs01_submission_deadline"),
   // Status fields (retained from original)
   latestAccountsStatus: text("latest_accounts_status"),
   latestCt600Status: text("latest_ct600_status"),

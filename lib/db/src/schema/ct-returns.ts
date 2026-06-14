@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, numeric, timestamp, boolean, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, numeric, timestamp, boolean, unique, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { clientsTable } from "./clients";
@@ -11,9 +11,9 @@ export const ctReturnsTable = pgTable(
     id: serial("id").primaryKey(),
     clientId: integer("client_id").notNull().references(() => clientsTable.id, { onDelete: "cascade" }),
     // Period
-    ctPeriodStart: text("ct_period_start"),
-    ctPeriodEnd: text("ct_period_end"),
-    ctPaymentDeadline: text("ct_payment_deadline"),
+    ctPeriodStart: date("ct_period_start"),
+    ctPeriodEnd: date("ct_period_end"),
+    ctPaymentDeadline: date("ct_payment_deadline"),
     // Computation — income
     companyTurnover: money("company_turnover"),
     tradingProfits: money("trading_profits"),

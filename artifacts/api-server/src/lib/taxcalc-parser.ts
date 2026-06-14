@@ -361,11 +361,6 @@ function handleDb5(rows: Record<string, unknown>[], clients: Map<string, ClientR
 }
 
 function handleDb6(rows: Record<string, unknown>[], clients: Map<string, ClientRecord>) {
-  if (rows.length > 0) {
-    console.log("[DEBUG DB6 HEADERS]", JSON.stringify(Object.keys(rows[0])));
-    const crfh = rows.find(r => str(r["Client code"]) === "30CRFH");
-    if (crfh) console.log("[DEBUG DB6 30CRFH RAW]", JSON.stringify(crfh));
-  }
   for (const row of rows) {
     const code = str(row["Client code"]);
     if (!code) continue;

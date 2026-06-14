@@ -257,7 +257,13 @@ function getDbNum(filename: string): number | null {
 function parseXls(data: Buffer): Array<Record<string, unknown>> {
   const wb = XLSX.read(data, { type: "buffer" });
   const sheet = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet, { defval: null }) as Array<Record<string, unknown>>;
+  const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null }) as unknown[][];
+  // Nanotax report exports prepend metadata rows (e.g. "Printed: ..." and report title)
+  // before the real column headers. Skip any leading rows that have only a single
+  // non-null cell — the first row with 2+ non-null cells is the real header row.
+  const headerRowIdx = raw.findIndex(row => (row as unknown[]).filter(c => c !== null).length > 1);
+  const startRow = headerRowIdx > 0 ? headerRowIdx : 0;
+  return XLSX.utils.sheet_to_json(sheet, { range: startRow, defval: null }) as Array<Record<string, unknown>>;
 }
 
 function parseXlsArray(data: Buffer, maxRows = 0): Array<Array<unknown>> {

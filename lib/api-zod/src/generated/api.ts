@@ -36,6 +36,7 @@ export const ListClientsQueryParams = zod.object({
   search: zod.coerce.string().optional(),
   type: zod.coerce.string().optional(),
   engagementStatus: zod.coerce.string().optional(),
+  assignedOffice: zod.coerce.string().optional(),
   page: zod.coerce.number().optional(),
   limit: zod.coerce.number().optional(),
 });
@@ -54,6 +55,7 @@ export const ListClientsResponse = zod.object({
       postcode: zod.string().nullish(),
       contactNumber: zod.string().nullish(),
       email: zod.string().nullish(),
+      assignedOffice: zod.string().nullish(),
       createdAt: zod.coerce.date().optional(),
     }),
   ),
@@ -98,6 +100,7 @@ export const GetClientResponse = zod.object({
     postcode: zod.string().nullish(),
     contactNumber: zod.string().nullish(),
     email: zod.string().nullish(),
+    assignedOffice: zod.string().nullish(),
     createdAt: zod.coerce.date().optional(),
   }),
   tasks: zod
@@ -192,6 +195,7 @@ export const UpdateClientResponse = zod.object({
   postcode: zod.string().nullish(),
   contactNumber: zod.string().nullish(),
   email: zod.string().nullish(),
+  assignedOffice: zod.string().nullish(),
   createdAt: zod.coerce.date().optional(),
 });
 
@@ -664,6 +668,7 @@ export const GetDashboardRecentClientsResponseItem = zod.object({
   postcode: zod.string().nullish(),
   contactNumber: zod.string().nullish(),
   email: zod.string().nullish(),
+  assignedOffice: zod.string().nullish(),
   createdAt: zod.coerce.date().optional(),
 });
 export const GetDashboardRecentClientsResponse = zod.array(

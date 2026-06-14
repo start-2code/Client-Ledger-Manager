@@ -25,5 +25,7 @@ export interface Client {
   contactNumber?: string | null;
   /** @nullable */
   email?: string | null;
+  /** @nullable */
+  assignedOffice?: string | null;
   createdAt?: Date;
 }

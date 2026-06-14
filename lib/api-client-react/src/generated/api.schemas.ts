@@ -28,6 +28,8 @@ export interface Client {
   contactNumber?: string | null;
   /** @nullable */
   email?: string | null;
+  /** @nullable */
+  assignedOffice?: string | null;
   createdAt?: string;
 }
 
@@ -678,6 +680,7 @@ export type ListClientsParams = {
   search?: string;
   type?: string;
   engagementStatus?: string;
+  assignedOffice?: string;
   page?: number;
   limit?: number;
 };

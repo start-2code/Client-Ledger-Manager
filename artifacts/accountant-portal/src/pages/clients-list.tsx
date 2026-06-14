@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
-import { Search, Plus, Building2, User, Users, Briefcase, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Building2, User, Users, Briefcase, MoreHorizontal, Pencil, Trash2, MapPin } from "lucide-react";
 import {
   useListClients,
   useDeleteClient,
@@ -42,7 +42,16 @@ type ClientRow = {
 export default function ClientsList() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState<string>("all");
+  const [assignedOffice, setAssignedOffice] = useState<string>("all");
   const [page, setPage] = useState(1);
+
+  const OFFICE_OPTIONS = [
+    "Clapham Common",
+    "DBW Wallington",
+    "Just Simply Organised Ltd",
+    "Tooting",
+    "Wallington",
+  ];
 
   const { data: dropdownData } = useListDropdownOptions({ category: "client_type" });
   const clientTypeOptions = dropdownData?.options ?? [];
@@ -56,6 +65,7 @@ export default function ClientsList() {
   const { data, isLoading } = useListClients({
     search: search || undefined,
     type: type !== "all" ? type : undefined,
+    assignedOffice: assignedOffice !== "all" ? assignedOffice : undefined,
     page,
     limit: 20,
   });
@@ -123,6 +133,17 @@ export default function ClientsList() {
               ))}
             </SelectContent>
         </Select>
+        <Select value={assignedOffice} onValueChange={(val) => { setAssignedOffice(val); setPage(1); }}>
+          <SelectTrigger className="w-full sm:w-[220px]">
+            <SelectValue placeholder="All Offices" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Offices</SelectItem>
+            {OFFICE_OPTIONS.map((office) => (
+              <SelectItem key={office} value={office}>{office}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="rounded-lg border bg-card">
@@ -133,6 +154,7 @@ export default function ClientsList() {
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Location</TableHead>
+              <TableHead>Office</TableHead>
               <TableHead>Email</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
@@ -145,6 +167,7 @@ export default function ClientsList() {
                   <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-28" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-40" /></TableCell>
                   <TableCell />
                 </TableRow>
@@ -167,6 +190,14 @@ export default function ClientsList() {
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{client.town || '-'}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {client.assignedOffice ? (
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" />
+                        <span className="text-sm">{client.assignedOffice}</span>
+                      </div>
+                    ) : '-'}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{client.email || '-'}</TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -198,7 +229,7 @@ export default function ClientsList() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                   No clients found.
                 </TableCell>
               </TableRow>

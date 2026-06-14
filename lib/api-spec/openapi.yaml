@@ -76,6 +76,10 @@ paths:
           in: query
           schema:
             type: string
+        - name: assignedOffice
+          in: query
+          schema:
+            type: string
         - name: page
           in: query
           schema:
@@ -893,6 +897,8 @@ components:
         contactNumber:
           type: ["string", "null"]
         email:
+          type: ["string", "null"]
+        assignedOffice:
           type: ["string", "null"]
         createdAt:
           type: string

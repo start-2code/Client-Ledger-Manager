@@ -16,7 +16,7 @@ const router = Router();
 router.get("/", async (req, res) => {
   try {
     const parsed = ListClientsQueryParams.safeParse(req.query);
-    const { search, type, engagementStatus, page = 1, limit = 50 } = parsed.success ? parsed.data : ({} as any);
+    const { search, type, engagementStatus, assignedOffice, page = 1, limit = 50 } = parsed.success ? parsed.data : ({} as any);
 
     const pageNum = Number(page) || 1;
     const limitNum = Math.min(Number(limit) || 50, 200);
@@ -35,6 +35,9 @@ router.get("/", async (req, res) => {
     }
     if (type) {
       conditions.push(ilike(clientsTable.type, `%${type}%`));
+    }
+    if (assignedOffice) {
+      conditions.push(eq(clientsTable.assignedOffice, assignedOffice));
     }
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;

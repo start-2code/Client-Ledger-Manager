@@ -10,6 +10,7 @@ export type ListClientsParams = {
   search?: string;
   type?: string;
   engagementStatus?: string;
+  assignedOffice?: string;
   page?: number;
   limit?: number;
 };

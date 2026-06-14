@@ -46,6 +46,7 @@ export * from "./importBatch";
 export * from "./importPreview";
 export * from "./importResult";
 export * from "./importRunResponse";
+export * from "./listClientsEngagementRecency";
 export * from "./listClientsParams";
 export * from "./listDropdownOptionsParams";
 export * from "./listFinancialInfoParams";

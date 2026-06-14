@@ -16,7 +16,7 @@ const router = Router();
 router.get("/", async (req, res) => {
   try {
     const parsed = ListClientsQueryParams.safeParse(req.query);
-    const { search, type, engagementStatus, assignedOffice, page = 1, limit = 50 } = parsed.success ? parsed.data : ({} as any);
+    const { search, type, engagementStatus, assignedOffice, yearEndMonth, engagementRecency, page = 1, limit = 50 } = parsed.success ? parsed.data : ({} as any);
 
     const pageNum = Number(page) || 1;
     const limitNum = Math.min(Number(limit) || 50, 200);
@@ -38,6 +38,19 @@ router.get("/", async (req, res) => {
     }
     if (assignedOffice) {
       conditions.push(eq(clientsTable.assignedOffice, assignedOffice));
+    }
+    if (yearEndMonth) {
+      conditions.push(ilike(clientsTable.usualYearEnd, `%${yearEndMonth}%`));
+    }
+    if (engagementRecency === "recent") {
+      conditions.push(sql`${clientsTable.dateOfLatestEngagement} >= CURRENT_DATE - INTERVAL '12 months'`);
+    } else if (engagementRecency === "not_recent") {
+      conditions.push(
+        or(
+          sql`${clientsTable.dateOfLatestEngagement} IS NULL`,
+          sql`${clientsTable.dateOfLatestEngagement} < CURRENT_DATE - INTERVAL '12 months'`
+        )!
+      );
     }
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;

@@ -683,9 +683,19 @@ export type ListClientsParams = {
   type?: string;
   engagementStatus?: string;
   assignedOffice?: string;
+  yearEndMonth?: string;
+  engagementRecency?: ListClientsEngagementRecency;
   page?: number;
   limit?: number;
 };
+
+export type ListClientsEngagementRecency =
+  (typeof ListClientsEngagementRecency)[keyof typeof ListClientsEngagementRecency];
+
+export const ListClientsEngagementRecency = {
+  recent: "recent",
+  not_recent: "not_recent",
+} as const;
 
 export type ListTasksParams = {
   clientId?: number;

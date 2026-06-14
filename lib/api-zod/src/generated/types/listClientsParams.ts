@@ -5,12 +5,15 @@
  * Accountant Practice Backoffice API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListClientsEngagementRecency } from "./listClientsEngagementRecency";
 
 export type ListClientsParams = {
   search?: string;
   type?: string;
   engagementStatus?: string;
   assignedOffice?: string;
+  yearEndMonth?: string;
+  engagementRecency?: ListClientsEngagementRecency;
   page?: number;
   limit?: number;
 };

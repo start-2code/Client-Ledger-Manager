@@ -80,6 +80,15 @@ paths:
           in: query
           schema:
             type: string
+        - name: yearEndMonth
+          in: query
+          schema:
+            type: string
+        - name: engagementRecency
+          in: query
+          schema:
+            type: string
+            enum: [recent, not_recent]
         - name: page
           in: query
           schema:

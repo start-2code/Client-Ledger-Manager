@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "wouter";
-import { Search, Plus, Building2, User, Users, Briefcase, MoreHorizontal, Pencil, Trash2, MapPin } from "lucide-react";
+import { Link, useSearch } from "wouter";
+import { Search, Plus, Building2, User, Users, Briefcase, MoreHorizontal, Pencil, Trash2, MapPin, X } from "lucide-react";
 import {
   useListClients,
   useDeleteClient,
@@ -40,9 +40,12 @@ type ClientRow = {
 };
 
 export default function ClientsList() {
+  const searchParams = new URLSearchParams(useSearch());
   const [search, setSearch] = useState("");
   const [type, setType] = useState<string>("all");
   const [assignedOffice, setAssignedOffice] = useState<string>("all");
+  const [yearEndMonth] = useState<string>(searchParams.get("yearEndMonth") ?? "");
+  const [engagementRecency] = useState<string>(searchParams.get("engagementRecency") ?? "");
   const [page, setPage] = useState(1);
 
   const OFFICE_OPTIONS = [
@@ -66,6 +69,8 @@ export default function ClientsList() {
     search: search || undefined,
     type: type !== "all" ? type : undefined,
     assignedOffice: assignedOffice !== "all" ? assignedOffice : undefined,
+    yearEndMonth: yearEndMonth || undefined,
+    engagementRecency: (engagementRecency as "recent" | "not_recent") || undefined,
     page,
     limit: 20,
   });
@@ -106,6 +111,21 @@ export default function ClientsList() {
           New Client
         </Button>
       </div>
+
+      {(yearEndMonth || engagementRecency) && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg text-sm">
+          <span className="text-primary font-medium">
+            {yearEndMonth && `Filtered: year-ends in ${yearEndMonth}`}
+            {engagementRecency === "recent" && "Filtered: recently engaged clients"}
+            {engagementRecency === "not_recent" && "Filtered: clients not recently engaged"}
+          </span>
+          <Link href="/clients">
+            <button className="ml-1 text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </Link>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-4 items-center bg-card p-4 rounded-lg border shadow-sm">
         <div className="relative w-full sm:w-80">

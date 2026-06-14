@@ -430,12 +430,25 @@ export default function Dashboard() {
             <CardDescription className="text-xs">Clients with year-ends this/next month</CardDescription>
           </CardHeader>
           <CardContent>
-            {timeline?.yearEnds.hasData ? (
-              <div className="space-y-3">
-                <DeadlineBand label="This month" count={timeline.yearEnds.thisMonth} color="bg-indigo-500" />
-                <DeadlineBand label="Next month" count={timeline.yearEnds.nextMonth} color="bg-indigo-300" />
-              </div>
-            ) : (
+            {timeline?.yearEnds.hasData ? (() => {
+              const thisMonthName = new Date().toLocaleString("en-GB", { month: "long" });
+              const nextMonthDate = new Date(); nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+              const nextMonthName = nextMonthDate.toLocaleString("en-GB", { month: "long" });
+              return (
+                <div className="space-y-3">
+                  <Link href={`/clients?yearEndMonth=${encodeURIComponent(thisMonthName)}`}>
+                    <div className="cursor-pointer hover:opacity-75 transition-opacity rounded p-1 -m-1">
+                      <DeadlineBand label={`This month (${thisMonthName})`} count={timeline.yearEnds.thisMonth} color="bg-indigo-500" />
+                    </div>
+                  </Link>
+                  <Link href={`/clients?yearEndMonth=${encodeURIComponent(nextMonthName)}`}>
+                    <div className="cursor-pointer hover:opacity-75 transition-opacity rounded p-1 -m-1">
+                      <DeadlineBand label={`Next month (${nextMonthName})`} count={timeline.yearEnds.nextMonth} color="bg-indigo-300" />
+                    </div>
+                  </Link>
+                </div>
+              );
+            })() : (
               <NoDataBadge message="Year-end dates not available in current import" />
             )}
           </CardContent>
@@ -496,16 +509,24 @@ export default function Dashboard() {
           <CardContent>
             {timeline?.clientEngagement.hasData ? (
               <div className="space-y-3">
-                <DeadlineBand
-                  label="Recently engaged"
-                  count={timeline.clientEngagement.recentCount ?? 0}
-                  color="bg-emerald-500"
-                />
-                <DeadlineBand
-                  label="Not recently engaged"
-                  count={timeline.clientEngagement.notEngagedCount}
-                  color="bg-rose-500"
-                />
+                <Link href="/clients?engagementRecency=recent">
+                  <div className="cursor-pointer hover:opacity-75 transition-opacity rounded p-1 -m-1">
+                    <DeadlineBand
+                      label="Recently engaged"
+                      count={timeline.clientEngagement.recentCount ?? 0}
+                      color="bg-emerald-500"
+                    />
+                  </div>
+                </Link>
+                <Link href="/clients?engagementRecency=not_recent">
+                  <div className="cursor-pointer hover:opacity-75 transition-opacity rounded p-1 -m-1">
+                    <DeadlineBand
+                      label="Not recently engaged"
+                      count={timeline.clientEngagement.notEngagedCount}
+                      color="bg-rose-500"
+                    />
+                  </div>
+                </Link>
               </div>
             ) : (
               <NoDataBadge message="Engagement dates not available in current import" />

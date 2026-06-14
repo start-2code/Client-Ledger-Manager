@@ -342,6 +342,12 @@ export type DashboardTimelineClientEngagement = {
   totalWithEngagement?: number;
 };
 
+export type DashboardTimelineAmlReview = {
+  overdueCount: number;
+  neverChecked: number;
+  total: number;
+};
+
 export interface DashboardTimeline {
   ctDeadlines: DashboardTimelineCtDeadlines;
   yearEnds: DashboardTimelineYearEnds;
@@ -351,6 +357,7 @@ export interface DashboardTimeline {
   confirmationStatements: DashboardTimelineConfirmationStatements;
   taskTimeline: DashboardTimelineTaskTimeline;
   clientEngagement: DashboardTimelineClientEngagement;
+  amlReview: DashboardTimelineAmlReview;
 }
 
 export interface StatusCount {
@@ -685,6 +692,7 @@ export type ListClientsParams = {
   assignedOffice?: string;
   yearEndMonth?: string;
   engagementRecency?: ListClientsEngagementRecency;
+  amlReviewDue?: boolean;
   page?: number;
   limit?: number;
 };

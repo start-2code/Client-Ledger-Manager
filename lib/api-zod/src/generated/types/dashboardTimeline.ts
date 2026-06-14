@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AccountsStatusItem } from "./accountsStatusItem";
+import type { DashboardTimelineAmlReview } from "./dashboardTimelineAmlReview";
 import type { DashboardTimelineClientEngagement } from "./dashboardTimelineClientEngagement";
 import type { DashboardTimelineConfirmationStatements } from "./dashboardTimelineConfirmationStatements";
 import type { DashboardTimelineCtDeadlines } from "./dashboardTimelineCtDeadlines";
@@ -23,4 +24,5 @@ export interface DashboardTimeline {
   confirmationStatements: DashboardTimelineConfirmationStatements;
   taskTimeline: DashboardTimelineTaskTimeline;
   clientEngagement: DashboardTimelineClientEngagement;
+  amlReview: DashboardTimelineAmlReview;
 }

@@ -13,6 +13,7 @@ import {
   Building2,
   TrendingUp,
   Info,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -295,6 +296,50 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── AML Review (WF-01) ── */}
+      <Card className="border-amber-200 dark:border-amber-800">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-amber-500" />
+              WF-01: AML Review List
+            </CardTitle>
+            <CardDescription className="mt-1">Clients whose last AML check was more than 12 months ago</CardDescription>
+          </div>
+          {timeline && timeline.amlReview.overdueCount > 0 && (
+            <Badge variant="destructive" className="text-base px-3 py-1">{timeline.amlReview.overdueCount}</Badge>
+          )}
+        </CardHeader>
+        <CardContent>
+          {timeline && (
+            timeline.amlReview.overdueCount === 0 && timeline.amlReview.neverChecked === 0 ? (
+              <NoDataBadge message="No AML check dates recorded — populate aml_last_check_date to enable this workflow" />
+            ) : (
+              <div className="flex items-center gap-8">
+                {timeline.amlReview.overdueCount > 0 && (
+                  <Link href="/clients?amlReviewDue=true">
+                    <div className="cursor-pointer hover:opacity-75 transition-opacity text-center">
+                      <div className="text-3xl font-bold text-destructive">{timeline.amlReview.overdueCount}</div>
+                      <p className="text-xs text-muted-foreground mt-1">overdue (&gt;12 months)</p>
+                    </div>
+                  </Link>
+                )}
+                {timeline.amlReview.neverChecked > 0 && (
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-amber-500">{timeline.amlReview.neverChecked}</div>
+                    <p className="text-xs text-muted-foreground mt-1">never checked</p>
+                  </div>
+                )}
+                <div className="text-center">
+                  <div className="text-2xl font-semibold text-slate-700 dark:text-slate-300">{timeline.amlReview.total - timeline.amlReview.overdueCount - timeline.amlReview.neverChecked}</div>
+                  <p className="text-xs text-muted-foreground mt-1">up to date</p>
+                </div>
+              </div>
+            )
+          )}
+        </CardContent>
+      </Card>
 
       {/* ── Row 3: Accounts Status + SA by Year ── */}
       <div className="grid gap-4 md:grid-cols-2">

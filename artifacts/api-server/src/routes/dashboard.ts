@@ -128,6 +128,7 @@ router.get("/timeline", async (req, res) => {
       yearEndRows,
       confirmationRows,
       engagementRows,
+      amlRows,
     ] = await Promise.all([
       // 1. CT Payment Deadlines – next 90 days (native date column)
       db.execute(sql`
@@ -226,6 +227,16 @@ router.get("/timeline", async (req, res) => {
           COUNT(CASE WHEN date_of_latest_engagement >= CURRENT_DATE - INTERVAL '12 months' THEN 1 END) AS recent_count
         FROM clients
       `),
+
+      // 9. AML Review – clients whose last AML check was > 12 months ago (WF-01)
+      db.execute(sql`
+        SELECT
+          COUNT(*) AS total,
+          COUNT(aml_last_check_date) AS with_date,
+          COUNT(CASE WHEN aml_last_check_date < CURRENT_DATE - INTERVAL '12 months' THEN 1 END) AS overdue_count,
+          COUNT(CASE WHEN aml_last_check_date IS NULL THEN 1 END) AS never_checked
+        FROM tax_references
+      `),
     ]);
 
     // 1. CT Deadlines counts
@@ -318,6 +329,14 @@ router.get("/timeline", async (req, res) => {
         recentCount: engRecentCount,
         totalWithEngagement: Number(engRow?.with_engagement ?? 0),
       },
+      amlReview: (() => {
+        const r = (amlRows.rows as any[])[0];
+        return {
+          total: Number(r?.total ?? 0),
+          overdueCount: Number(r?.overdue_count ?? 0),
+          neverChecked: Number(r?.never_checked ?? 0),
+        };
+      })(),
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get dashboard timeline");

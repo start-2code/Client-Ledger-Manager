@@ -39,6 +39,7 @@ export const ListClientsQueryParams = zod.object({
   assignedOffice: zod.coerce.string().optional(),
   yearEndMonth: zod.coerce.string().optional(),
   engagementRecency: zod.enum(["recent", "not_recent"]).optional(),
+  amlReviewDue: zod.coerce.boolean().optional(),
   page: zod.coerce.number().optional(),
   limit: zod.coerce.number().optional(),
 });
@@ -650,6 +651,11 @@ export const GetDashboardTimelineResponse = zod.object({
     notEngagedCount: zod.number(),
     recentCount: zod.number().optional(),
     totalWithEngagement: zod.number().optional(),
+  }),
+  amlReview: zod.object({
+    overdueCount: zod.number(),
+    neverChecked: zod.number(),
+    total: zod.number(),
   }),
 });
 

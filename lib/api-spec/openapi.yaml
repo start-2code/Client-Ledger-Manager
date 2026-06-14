@@ -89,6 +89,10 @@ paths:
           schema:
             type: string
             enum: [recent, not_recent]
+        - name: amlReviewDue
+          in: query
+          schema:
+            type: boolean
         - name: page
           in: query
           schema:
@@ -1259,7 +1263,7 @@ components:
 
     DashboardTimeline:
       type: object
-      required: [ctDeadlines, yearEnds, ctOutstanding, accountsStatus, saByYear, confirmationStatements, taskTimeline, clientEngagement]
+      required: [ctDeadlines, yearEnds, ctOutstanding, accountsStatus, saByYear, confirmationStatements, taskTimeline, clientEngagement, amlReview]
       properties:
         ctDeadlines:
           type: object
@@ -1317,6 +1321,13 @@ components:
             notEngagedCount: { type: integer }
             recentCount: { type: integer }
             totalWithEngagement: { type: integer }
+        amlReview:
+          type: object
+          required: [overdueCount, neverChecked, total]
+          properties:
+            overdueCount: { type: integer }
+            neverChecked: { type: integer }
+            total: { type: integer }
 
     DashboardSummary:
       type: object

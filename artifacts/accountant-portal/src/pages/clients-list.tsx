@@ -46,6 +46,7 @@ export default function ClientsList() {
   const [assignedOffice, setAssignedOffice] = useState<string>("all");
   const [yearEndMonth] = useState<string>(searchParams.get("yearEndMonth") ?? "");
   const [engagementRecency] = useState<string>(searchParams.get("engagementRecency") ?? "");
+  const [amlReviewDue] = useState<boolean>(searchParams.get("amlReviewDue") === "true");
   const [page, setPage] = useState(1);
 
   const OFFICE_OPTIONS = [
@@ -71,6 +72,7 @@ export default function ClientsList() {
     assignedOffice: assignedOffice !== "all" ? assignedOffice : undefined,
     yearEndMonth: yearEndMonth || undefined,
     engagementRecency: (engagementRecency as "recent" | "not_recent") || undefined,
+    amlReviewDue: amlReviewDue || undefined,
     page,
     limit: 20,
   });
@@ -112,12 +114,13 @@ export default function ClientsList() {
         </Button>
       </div>
 
-      {(yearEndMonth || engagementRecency) && (
+      {(yearEndMonth || engagementRecency || amlReviewDue) && (
         <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg text-sm">
           <span className="text-primary font-medium">
             {yearEndMonth && `Filtered: year-ends in ${yearEndMonth}`}
             {engagementRecency === "recent" && "Filtered: recently engaged clients"}
             {engagementRecency === "not_recent" && "Filtered: clients not recently engaged"}
+            {amlReviewDue && "Filtered: AML review overdue (> 12 months)"}
           </span>
           <Link href="/clients">
             <button className="ml-1 text-muted-foreground hover:text-foreground">

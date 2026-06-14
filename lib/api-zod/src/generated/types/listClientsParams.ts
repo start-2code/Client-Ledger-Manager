@@ -14,6 +14,7 @@ export type ListClientsParams = {
   assignedOffice?: string;
   yearEndMonth?: string;
   engagementRecency?: ListClientsEngagementRecency;
+  amlReviewDue?: boolean;
   page?: number;
   limit?: number;
 };

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { clientsTable } from "@workspace/db";
-import { eq, ilike, or, and, count, sql } from "drizzle-orm";
+import { eq, ilike, or, and, count, sql, inArray } from "drizzle-orm";
+import { taxReferencesTable } from "@workspace/db";
 import {
   ListClientsQueryParams,
   CreateClientBody,
@@ -16,7 +17,7 @@ const router = Router();
 router.get("/", async (req, res) => {
   try {
     const parsed = ListClientsQueryParams.safeParse(req.query);
-    const { search, type, engagementStatus, assignedOffice, yearEndMonth, engagementRecency, page = 1, limit = 50 } = parsed.success ? parsed.data : ({} as any);
+    const { search, type, engagementStatus, assignedOffice, yearEndMonth, engagementRecency, amlReviewDue, page = 1, limit = 50 } = parsed.success ? parsed.data : ({} as any);
 
     const pageNum = Number(page) || 1;
     const limitNum = Math.min(Number(limit) || 50, 200);
@@ -51,6 +52,19 @@ router.get("/", async (req, res) => {
           sql`${clientsTable.dateOfLatestEngagement} < CURRENT_DATE - INTERVAL '12 months'`
         )!
       );
+    }
+
+    if (amlReviewDue === true || amlReviewDue === "true") {
+      const amlOverdueClients = await db
+        .select({ clientId: taxReferencesTable.clientId })
+        .from(taxReferencesTable)
+        .where(sql`${taxReferencesTable.amlLastCheckDate} < CURRENT_DATE - INTERVAL '12 months'`);
+      const ids = amlOverdueClients.map((r) => r.clientId).filter(Boolean) as number[];
+      if (ids.length > 0) {
+        conditions.push(inArray(clientsTable.id, ids));
+      } else {
+        conditions.push(sql`1 = 0`);
+      }
     }
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;

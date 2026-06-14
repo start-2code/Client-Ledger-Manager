@@ -129,31 +129,31 @@ router.get("/timeline", async (req, res) => {
       confirmationRows,
       engagementRows,
     ] = await Promise.all([
-      // 1. CT Payment Deadlines – next 90 days (ISO-format deadlines only)
+      // 1. CT Payment Deadlines – next 90 days (native date column)
       db.execute(sql`
         SELECT c.id AS "clientId", c.code AS "clientCode", c.name AS "clientName",
-               ct.ct_payment_deadline AS deadline
+               ct.ct_payment_deadline::text AS deadline
         FROM ct_returns ct
         JOIN clients c ON c.id = ct.client_id
-        WHERE ct.ct_payment_deadline ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
-          AND ct.ct_payment_deadline::date >= ${today}::date
-          AND ct.ct_payment_deadline::date <= ${in90}::date
+        WHERE ct.ct_payment_deadline IS NOT NULL
+          AND ct.ct_payment_deadline >= ${today}::date
+          AND ct.ct_payment_deadline <= ${in90}::date
           AND (ct.return_filed_successfully IS NULL OR ct.return_filed_successfully = false)
-        ORDER BY ct.ct_payment_deadline::date
+        ORDER BY ct.ct_payment_deadline
         LIMIT 50
       `),
 
-      // 3. CT Returns – period ended > 9 months ago, not yet filed (DD/MM/YYYY)
+      // 3. CT Returns – period ended > 9 months ago, not yet filed (native date column)
       db.execute(sql`
         SELECT c.id AS "clientId", c.code AS "clientCode", c.name AS "clientName",
-               ct.ct_period_end AS "periodEnd",
-               ROUND((CURRENT_DATE - TO_DATE(ct.ct_period_end,'DD/MM/YYYY')) / 30.0) AS "monthsSinceEnd"
+               ct.ct_period_end::text AS "periodEnd",
+               ROUND((CURRENT_DATE - ct.ct_period_end) / 30.0) AS "monthsSinceEnd"
         FROM ct_returns ct
         JOIN clients c ON c.id = ct.client_id
-        WHERE ct.ct_period_end ~ '^[0-9]{2}/[0-9]{2}/[0-9]{4}$'
-          AND TO_DATE(ct.ct_period_end,'DD/MM/YYYY') < CURRENT_DATE - INTERVAL '9 months'
+        WHERE ct.ct_period_end IS NOT NULL
+          AND ct.ct_period_end < CURRENT_DATE - INTERVAL '9 months'
           AND (ct.return_filed_successfully IS NULL OR ct.return_filed_successfully = false)
-        ORDER BY TO_DATE(ct.ct_period_end,'DD/MM/YYYY')
+        ORDER BY ct.ct_period_end
         LIMIT 50
       `),
 
@@ -163,8 +163,8 @@ router.get("/timeline", async (req, res) => {
           accounts_status AS status,
           COUNT(*) AS count,
           COUNT(CASE
-            WHEN period_end ~ '^[0-9]{2}/[0-9]{2}/[0-9]{4}$'
-             AND TO_DATE(period_end,'DD/MM/YYYY') < CURRENT_DATE - INTERVAL '9 months'
+            WHEN period_end IS NOT NULL
+             AND period_end < CURRENT_DATE - INTERVAL '9 months'
             THEN 1 END) AS "overdueCount"
         FROM accounts_periods
         GROUP BY accounts_status

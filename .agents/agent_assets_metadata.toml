@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "DEAx96__Sgeo1dBDqP_yb"
+uri = "file://ClearBooks_Field_Mapping_and_Workflows.md"
+type = "text"
+title = "ClearBooks — Field Mapping & Practice Workflow Guide"

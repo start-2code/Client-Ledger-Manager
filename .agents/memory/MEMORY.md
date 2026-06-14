@@ -1,1 +1,1 @@
-- [Nanotax ZIP import quirks](nanotax-zip-import.md) — three compounding bugs fixed in the TaxCalc/Nanotax ZIP importer
+- [Nanotax HTML-as-Excel parsing](nanotax-html-excel.md) — Nanotax ZIP DB files are HTML tables with .xlsx extension; self-closing <td/> causes SheetJS column shift.

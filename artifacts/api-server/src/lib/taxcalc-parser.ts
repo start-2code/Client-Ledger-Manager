@@ -188,8 +188,11 @@ function excelDateToISO(val: unknown): string | null {
     // date columns accept the value and queries/sorts work correctly.
     const dmyMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (dmyMatch) return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
-    // Already ISO (YYYY-MM-DD) or some other string — pass through.
-    return trimmed;
+    // Already ISO (YYYY-MM-DD) — pass through.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+    // Unrecognised string format (e.g. "24 September", "Jan 2024") — null out
+    // rather than let Postgres reject it when inserting into a date column.
+    return null;
   }
   if (typeof val === "number" && val > 25569 && val < 100000) {
     const d = new Date((val - 25569) * 86400 * 1000);
@@ -416,7 +419,7 @@ function handleDb8(rows: Record<string, unknown>[], clients: Map<string, ClientR
     const c = ensureClient(clients, code);
     c.date64_8Completion = excelDateToISO(row["64-8 completion date"]) ?? c.date64_8Completion;
     c.status64_8 = str(row["64-8 status"]) ?? c.status64_8;
-    c.taxRef.amlLastCheckDate = excelDateToISO(row["Last AML check date"]) ?? str(row["Last AML check date"]) ?? c.taxRef.amlLastCheckDate;
+    c.taxRef.amlLastCheckDate = excelDateToISO(row["Last AML check date"]) ?? c.taxRef.amlLastCheckDate;
     c.assignedOffice = str(row["Assigned to office"]) ?? c.assignedOffice;
     c.bookkeepingSoftware = str(row["Bookkeeping software"]) ?? c.bookkeepingSoftware;
     c.paymentMethod = str(row["Payment method"]) ?? c.paymentMethod;
@@ -534,7 +537,7 @@ function handleDb13(rows: Record<string, unknown>[], clients: Map<string, Client
     if (!code) continue;
     const c = ensureClient(clients, code);
     c.accountsPeriod["periodStart"] = excelDateToISO(row["Accounting period start date (Latest)"]) ?? c.accountsPeriod["periodStart"];
-    c.accountsPeriod["periodEnd"] = excelDateToISO(row["Accounting period end date (Latest)"]) ?? str(row["Accounting period end date (Latest)"]) ?? c.accountsPeriod["periodEnd"];
+    c.accountsPeriod["periodEnd"] = excelDateToISO(row["Accounting period end date (Latest)"]) ?? c.accountsPeriod["periodEnd"];
     c.accountsPeriod["accountsStatus"] = str(row["Accounts submission status (Latest)"]) ?? c.accountsPeriod["accountsStatus"];
     c.accountsPeriod["periodLocked"] = str(row["Accounting period locked? (Latest)"]) ?? c.accountsPeriod["periodLocked"];
     c.accountsPeriod["accountingStandard"] = str(row["Accounting standard (Latest)"]) ?? c.accountsPeriod["accountingStandard"];
@@ -563,7 +566,7 @@ function handleDb15(rows: Record<string, unknown>[], clients: Map<string, Client
     if (!seen.has(code)) {
       seen.add(code);
       c.taxRef.vatRegNo = str(row["VAT registration no."]) ?? c.taxRef.vatRegNo;
-      c.taxRef.vatRegDate = excelDateToISO(row["VAT registration date"]) ?? str(row["VAT registration date"]) ?? c.taxRef.vatRegDate;
+      c.taxRef.vatRegDate = excelDateToISO(row["VAT registration date"]) ?? c.taxRef.vatRegDate;
       c.taxRef.vatDeRegistrationDate = excelDateToISO(row["VAT de-registration date"]) ?? c.taxRef.vatDeRegistrationDate;
       c.taxRef.vatPeriodEnd = str(row["VAT period end"]) ?? c.taxRef.vatPeriodEnd;
       c.taxRef.vatScheme = str(row["VAT scheme"]) ?? c.taxRef.vatScheme;
@@ -807,9 +810,9 @@ function handleCtFile(rows: Record<string, unknown>[], clients: Map<string, Clie
       c.ctReturn["rdAndCreativeEnhancedExpenditure"] = num(row["R&D and creative enhanced expenditure (Latest)"]);
       c.ctReturn["rdEnhancedExpenditureIncSubcontracted"] = num(row["R&D enhanced expenditure inc sub-contracted (Latest)"]);
     } else if (dbNum === 41) {
-      c.ctReturn["ctPeriodStart"] = excelDateToISO(row["CT period start date (Latest)"]) ?? str(row["CT period start date (Latest)"]);
-      c.ctReturn["ctPeriodEnd"] = excelDateToISO(row["CT period end date (Latest)"]) ?? str(row["CT period end date (Latest)"]);
-      c.ctReturn["ctPaymentDeadline"] = excelDateToISO(row["CT payment deadline (Latest)"]) ?? str(row["CT payment deadline (Latest)"]);
+      c.ctReturn["ctPeriodStart"] = excelDateToISO(row["CT period start date (Latest)"]) ?? c.ctReturn["ctPeriodStart"];
+      c.ctReturn["ctPeriodEnd"] = excelDateToISO(row["CT period end date (Latest)"]) ?? c.ctReturn["ctPeriodEnd"];
+      c.ctReturn["ctPaymentDeadline"] = excelDateToISO(row["CT payment deadline (Latest)"]) ?? c.ctReturn["ctPaymentDeadline"];
       c.ctReturn["returnFiledSuccessfully"] = bool(row["CT Return filed successfully? (Latest)"]);
       c.ctReturn["returnLocked"] = bool(row["CT Return locked? (Latest)"]);
     }

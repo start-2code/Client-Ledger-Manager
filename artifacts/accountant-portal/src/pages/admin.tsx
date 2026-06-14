@@ -14,10 +14,9 @@ import {
   getListDropdownOptionsQueryKey,
   useImportPreview,
   useImportRun,
-  useImportStatus,
   useImportHistory,
-  getImportHistoryQueryKey,
 } from "@workspace/api-client-react";
+
 import { useQueryClient } from "@tanstack/react-query";
 import type { ImportPreview, ImportBatch } from "@workspace/api-client-react";
 import { format } from "date-fns";
@@ -160,38 +159,44 @@ function ImportPanel() {
 
   const previewMutation = useImportPreview();
   const runMutation = useImportRun();
-  const { data: historyData, isLoading: historyLoading } = useImportHistory();
-  const batches: ImportBatch[] = historyData?.batches ?? [];
 
-  // Poll the batch status while an import is running
-  const { data: batchStatus } = useImportStatus(pendingBatchId ?? 0, {
+  // History auto-polls every 2 s while any batch is running or pending,
+  // so the status badge updates even if the user navigated away and came back.
+  const { data: historyData, isLoading: historyLoading } = useImportHistory({
     query: {
-      enabled: !!pendingBatchId,
-      refetchInterval: 2000,
+      refetchInterval: (query: any) => {
+        const batches: ImportBatch[] = query.state.data?.batches ?? [];
+        return batches.some(
+          (b) => b.status === "running" || b.status === "pending"
+        )
+          ? 2000
+          : false;
+      },
     } as any,
   });
+  const batches: ImportBatch[] = historyData?.batches ?? [];
 
-  // When the batch finishes, refresh history and clear the pending ID
+  // Watch the specific pending batch in history for completion (to show toast).
+  const pendingBatch = batches.find((b) => b.id === pendingBatchId);
   React.useEffect(() => {
-    if (!batchStatus) return;
-    if (DONE_STATUSES.has(batchStatus.status ?? "")) {
-      qc.invalidateQueries({ queryKey: getImportHistoryQueryKey() });
+    if (!pendingBatch || !pendingBatchId) return;
+    if (DONE_STATUSES.has(pendingBatch.status ?? "")) {
       setPendingBatchId(null);
       pollStartRef.current = null;
-      if (batchStatus.status === "success") {
+      if (pendingBatch.status === "success") {
         toast.success(
-          `Import complete — ${batchStatus.clientsAdded ?? 0} added, ${batchStatus.clientsUpdated ?? 0} updated, ${batchStatus.clientsRemoved ?? 0} removed`
+          `Import complete — ${pendingBatch.clientsAdded ?? 0} added, ${pendingBatch.clientsUpdated ?? 0} updated, ${pendingBatch.clientsRemoved ?? 0} removed`
         );
-      } else if (batchStatus.status === "partial") {
+      } else if (pendingBatch.status === "partial") {
         toast.warning("Import completed with some errors — see history below");
       } else {
-        toast.error(batchStatus.errorMessage ?? "Import failed — see history for details");
+        toast.error(pendingBatch.errorMessage ?? "Import failed — see history for details");
       }
     }
-  }, [batchStatus?.status]);
+  }, [pendingBatch?.status]);
 
-  // Client-side safety net: stop polling after POLL_TIMEOUT_MS even if server
-  // never transitions the batch to a terminal state.
+  // Client-side safety net: clear pendingBatchId after POLL_TIMEOUT_MS so the
+  // UI never stays stuck in "running" state forever.
   React.useEffect(() => {
     if (!pendingBatchId) return;
     if (!pollStartRef.current) pollStartRef.current = Date.now();
@@ -199,12 +204,14 @@ function ImportPanel() {
     if (elapsed > POLL_TIMEOUT_MS) {
       setPendingBatchId(null);
       pollStartRef.current = null;
-      qc.invalidateQueries({ queryKey: getImportHistoryQueryKey() });
       toast.error("Import is taking unusually long. Check the history table — it may have completed or failed in the background.");
     }
-  }, [batchStatus]);
+  }, [batches]);
 
-  const isRunning = !!pendingBatchId;
+  // isRunning: this session started an import, OR history already shows one in-flight.
+  const isRunning =
+    !!pendingBatchId ||
+    batches.some((b) => b.status === "running" || b.status === "pending");
 
   const handleFileSelect = (file: File | null) => {
     setSelectedFile(file);

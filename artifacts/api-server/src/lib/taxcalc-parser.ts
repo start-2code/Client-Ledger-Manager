@@ -73,9 +73,11 @@ export interface ClientRecord {
   forename?: string;
   middleName?: string;
   surname?: string;
+  friendlySalutation?: string;
   gender?: string;
   maritalStatus?: string;
   dateOfBirth?: string;
+  dateOfDeath?: string;
   nationality?: string;
   countryOfResidence?: string;
   // Address
@@ -311,9 +313,11 @@ function handleDb3(rows: Record<string, unknown>[], clients: Map<string, ClientR
     c.forename = str(row["Forename"]) ?? c.forename;
     c.middleName = str(row["Middle name"]) ?? c.middleName;
     c.surname = str(row["Surname"]) ?? c.surname;
+    c.friendlySalutation = str(row["Friendly salutation"]) ?? c.friendlySalutation;
     c.gender = str(row["Gender"]) ?? c.gender;
     c.maritalStatus = str(row["Marital status"]) ?? c.maritalStatus;
     c.dateOfBirth = excelDateToISO(row["Date of Birth"]) ?? c.dateOfBirth;
+    c.dateOfDeath = excelDateToISO(row["Date of Death"]) ?? c.dateOfDeath;
     c.countryOfResidence = str(row["Country of residence"]) ?? c.countryOfResidence;
     c.nationality = str(row["Nationality"]) ?? c.nationality;
   }

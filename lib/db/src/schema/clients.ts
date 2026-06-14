@@ -21,9 +21,11 @@ export const clientsTable = pgTable("clients", {
   forename: text("forename"),
   middleName: text("middle_name"),
   surname: text("surname"),
+  friendlySalutation: text("friendly_salutation"),
   gender: text("gender"),
   maritalStatus: text("marital_status"),
   dateOfBirth: text("date_of_birth"),
+  dateOfDeath: text("date_of_death"),
   nationality: text("nationality"),
   countryOfResidence: text("country_of_residence"),
   // Business info

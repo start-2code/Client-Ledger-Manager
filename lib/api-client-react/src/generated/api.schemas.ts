@@ -338,6 +338,8 @@ export type DashboardTimelineTaskTimeline = {
 export type DashboardTimelineClientEngagement = {
   hasData: boolean;
   notEngagedCount: number;
+  recentCount?: number;
+  totalWithEngagement?: number;
 };
 
 export interface DashboardTimeline {

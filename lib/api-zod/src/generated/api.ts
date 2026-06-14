@@ -646,6 +646,8 @@ export const GetDashboardTimelineResponse = zod.object({
   clientEngagement: zod.object({
     hasData: zod.boolean(),
     notEngagedCount: zod.number(),
+    recentCount: zod.number().optional(),
+    totalWithEngagement: zod.number().optional(),
   }),
 });
 

@@ -201,10 +201,12 @@ router.get("/timeline", async (req, res) => {
         LIMIT 50
       `),
 
-      // 2. Year-ends – check if usual_year_end has real date data
+      // 2. Year-ends – count clients whose year-end month matches this/next calendar month
       db.execute(sql`
-        SELECT COUNT(*) AS total,
-               COUNT(CASE WHEN usual_year_end ~ '^[0-9]{2}/[0-9]{2}$' OR usual_year_end ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN 1 END) AS has_dates
+        SELECT
+          COUNT(CASE WHEN usual_year_end ILIKE '%' || to_char(CURRENT_DATE, 'FMMonth') || '%' THEN 1 END) AS this_month,
+          COUNT(CASE WHEN usual_year_end ILIKE '%' || to_char(CURRENT_DATE + INTERVAL '1 month', 'FMMonth') || '%' THEN 1 END) AS next_month,
+          COUNT(*) AS total
         FROM clients
         WHERE usual_year_end IS NOT NULL
       `),
@@ -216,10 +218,12 @@ router.get("/timeline", async (req, res) => {
         FROM clients
       `),
 
-      // 8. Client engagement
+      // 8. Client engagement – count total vs recently engaged (last 12 months)
       db.execute(sql`
-        SELECT COUNT(*) AS total,
-               COUNT(CASE WHEN date_of_latest_engagement IS NOT NULL THEN 1 END) AS with_engagement
+        SELECT
+          COUNT(*) AS total,
+          COUNT(date_of_latest_engagement) AS with_engagement,
+          COUNT(CASE WHEN date_of_latest_engagement >= CURRENT_DATE - INTERVAL '12 months' THEN 1 END) AS recent_count
         FROM clients
       `),
     ]);
@@ -237,7 +241,9 @@ router.get("/timeline", async (req, res) => {
 
     // 2. Year ends
     const yeRow = (yearEndRows.rows as any[])[0];
-    const yearEndHasData = Number(yeRow?.has_dates ?? 0) > 0;
+    const yearEndThisMonth = Number(yeRow?.this_month ?? 0);
+    const yearEndNextMonth = Number(yeRow?.next_month ?? 0);
+    const yearEndHasData = Number(yeRow?.total ?? 0) > 0;
 
     // 6. Confirmation statements
     const confRow = (confirmationRows.rows as any[])[0];
@@ -245,6 +251,8 @@ router.get("/timeline", async (req, res) => {
 
     // 8. Client engagement
     const engRow = (engagementRows.rows as any[])[0];
+    const engTotal = Number(engRow?.total ?? 0);
+    const engRecentCount = Number(engRow?.recent_count ?? 0);
     const engHasData = Number(engRow?.with_engagement ?? 0) > 0;
 
     // 7. Tasks
@@ -269,8 +277,8 @@ router.get("/timeline", async (req, res) => {
       },
       yearEnds: {
         hasData: yearEndHasData,
-        thisMonth: 0,
-        nextMonth: 0,
+        thisMonth: yearEndThisMonth,
+        nextMonth: yearEndNextMonth,
       },
       ctOutstanding: {
         total: (ctOutstandingRows.rows as any[]).length,
@@ -306,7 +314,9 @@ router.get("/timeline", async (req, res) => {
       },
       clientEngagement: {
         hasData: engHasData,
-        notEngagedCount: 0,
+        notEngagedCount: engTotal - engRecentCount,
+        recentCount: engRecentCount,
+        totalWithEngagement: Number(engRow?.with_engagement ?? 0),
       },
     });
   } catch (err) {

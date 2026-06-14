@@ -9,4 +9,6 @@
 export type DashboardTimelineClientEngagement = {
   hasData: boolean;
   notEngagedCount: number;
+  recentCount?: number;
+  totalWithEngagement?: number;
 };

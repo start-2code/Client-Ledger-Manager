@@ -491,15 +491,21 @@ export default function Dashboard() {
               <Users className="h-4 w-4 text-rose-500" />
               Client Engagement
             </CardTitle>
-            <CardDescription className="text-xs">Latest engagement date tracking</CardDescription>
+            <CardDescription className="text-xs">Engagement in the last 12 months</CardDescription>
           </CardHeader>
           <CardContent>
             {timeline?.clientEngagement.hasData ? (
               <div className="space-y-3">
-                <div className="text-2xl font-bold text-destructive">
-                  {timeline.clientEngagement.notEngagedCount}
-                </div>
-                <p className="text-xs text-muted-foreground">clients with no recent engagement recorded</p>
+                <DeadlineBand
+                  label="Recently engaged"
+                  count={timeline.clientEngagement.recentCount ?? 0}
+                  color="bg-emerald-500"
+                />
+                <DeadlineBand
+                  label="Not recently engaged"
+                  count={timeline.clientEngagement.notEngagedCount}
+                  color="bg-rose-500"
+                />
               </div>
             ) : (
               <NoDataBadge message="Engagement dates not available in current import" />

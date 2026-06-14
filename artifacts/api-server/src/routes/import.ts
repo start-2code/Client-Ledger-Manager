@@ -64,7 +64,7 @@ router.post("/run", upload.single("file"), async (req, res) => {
           .set({ status: "running" })
           .where(eq(importBatchesTable.id, batch.id));
 
-        const result = await runImport(clients, { importedBy, filename });
+        const result = await runImport(clients, { importedBy, filename, presentDbNums: parseResult.presentDbNums });
 
         await db
           .update(importBatchesTable)

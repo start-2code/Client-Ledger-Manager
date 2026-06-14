@@ -962,18 +962,20 @@ function handlePersonalTaxDetails(rows: Record<string, unknown>[], clients: Map<
 export interface ParseResult {
   clients: Map<string, ClientRecord>;
   fileCount: number;
+  presentDbNums: Set<number>;
   errors: string[];
 }
 
 export function parseTaxCalcZip(zipBuffer: Buffer): ParseResult {
   const errors: string[] = [];
   const clients = new Map<string, ClientRecord>();
+  const presentDbNums = new Set<number>();
 
   let entries: Array<{ filename: string; data: Buffer }>;
   try {
     entries = extractZipEntries(zipBuffer);
   } catch (e: any) {
-    return { clients, fileCount: 0, errors: [`Failed to extract zip: ${e.message}`] };
+    return { clients, fileCount: 0, presentDbNums, errors: [`Failed to extract zip: ${e.message}`] };
   }
 
   let fileCount = 0;
@@ -981,6 +983,7 @@ export function parseTaxCalcZip(zipBuffer: Buffer): ParseResult {
     const dbNum = getDbNum(entry.filename);
     if (!dbNum) continue;
     fileCount++;
+    presentDbNums.add(dbNum);
 
     try {
       if (dbNum === 11) {
@@ -1035,5 +1038,5 @@ export function parseTaxCalcZip(zipBuffer: Buffer): ParseResult {
     }
   }
 
-  return { clients, fileCount, errors };
+  return { clients, fileCount, presentDbNums, errors };
 }

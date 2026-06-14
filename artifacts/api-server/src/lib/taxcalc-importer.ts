@@ -26,11 +26,18 @@ function n(v: string | null | undefined): string | null {
 }
 
 /**
- * Builds the SET clause for an ON CONFLICT DO UPDATE, referencing EXCLUDED.<col>
- * for every column not in `skipKeys`. This lets us bulk-upsert without repeating
- * the full values object.
+ * Builds the SET clause for an ON CONFLICT DO UPDATE.
+ *
+ * - `directKeys`: columns whose DB file IS present in the ZIP. These use
+ *   `excluded.<col>` directly so a blank value can clear a previously-wrong entry.
+ * - All other columns use `COALESCE(excluded.<col>, table.<col>)` so partial
+ *   imports (where that DB file is absent) leave existing values untouched.
  */
-function makeExcludedSet(table: any, skipKeys: string[]): Record<string, any> {
+function makeExcludedSet(
+  table: any,
+  skipKeys: string[],
+  directKeys: Set<string> = new Set(),
+): Record<string, any> {
   const tableName = getTableName(table);
   const cols = getTableColumns(table) as Record<string, { name: string }>;
   return Object.fromEntries(
@@ -38,13 +45,27 @@ function makeExcludedSet(table: any, skipKeys: string[]): Record<string, any> {
       .filter(([key]) => !skipKeys.includes(key))
       .map(([key, col]) => [
         key,
-        // COALESCE preserves the existing value when the incoming value is NULL.
-        // This makes partial imports safe: only fields present in the ZIP are updated;
-        // fields from files not included in the ZIP are left untouched.
-        sql.raw(`COALESCE(excluded.${col.name}, ${tableName}.${col.name})`),
+        directKeys.has(key)
+          ? sql.raw(`excluded.${col.name}`)
+          : sql.raw(`COALESCE(excluded.${col.name}, ${tableName}.${col.name})`),
       ]),
   );
 }
+
+/**
+ * Maps each DB file number to the client-table fields it owns.
+ * When that DB file is present in the ZIP, those fields are written directly
+ * (overwriting even with null). When the DB file is absent, COALESCE applies.
+ */
+const DB_CLIENT_FIELDS: Record<number, string[]> = {
+  3: ["title", "forename", "middleName", "surname", "friendlySalutation", "gender", "maritalStatus", "dateOfBirth", "dateOfDeath", "countryOfResidence", "nationality"],
+  4: ["occupation", "businessName", "businessType", "usualYearEnd", "anticipatedTurnover", "industryType", "enrolledForMtdVat"],
+  5: ["dateOfCommencement", "dateOfCessation", "limitedLiabilityPartnership", "companyType", "countryOfIncorporation", "dateOfIncorporation", "tradingStatus", "isPropertyBusiness", "companyAuthenticationCode", "confirmationStatementDate"],
+  6: ["addressLine1", "addressLine2", "town", "county", "country", "postcode", "contactNumber", "email"],
+  7: ["consentType", "consentStatus", "methodOfConsent", "dateOfConsent", "engagementStatus", "dateOfLatestEngagement", "dateOfClientLoss"],
+  8: ["date64_8Completion", "status64_8", "assignedOffice", "bookkeepingSoftware", "paymentMethod"],
+  12: ["clientCreationDate", "archived", "website", "amlStatus"],
+};
 
 async function bulkUpsert<T extends Record<string, any>>(
   table: any,
@@ -114,7 +135,7 @@ export async function previewImport(clients: Map<string, ClientRecord>): Promise
 
 export async function runImport(
   clients: Map<string, ClientRecord>,
-  options: { importedBy?: string; filename?: string } = {},
+  options: { importedBy?: string; filename?: string; presentDbNums?: Set<number> } = {},
 ): Promise<ImportResult> {
   const errors: string[] = [];
 
@@ -190,9 +211,20 @@ export async function runImport(
     date64_8Completion: n(cr.date64_8Completion),
   }));
 
+  // Build the set of fields that should be written directly (no COALESCE) because
+  // their owning DB file IS present in the ZIP. A blank value in that file means
+  // "clear this field", not "leave it alone".
+  const presentDbNums = options.presentDbNums ?? new Set<number>();
+  const directClientFields = new Set<string>();
+  for (const [dbNum, fields] of Object.entries(DB_CLIENT_FIELDS)) {
+    if (presentDbNums.has(Number(dbNum))) {
+      for (const f of fields) directClientFields.add(f);
+    }
+  }
+
   const clientIdMap = new Map<string, number>();
   const clientExcludedSet = {
-    ...makeExcludedSet(clientsTable, ["id", "code"]),
+    ...makeExcludedSet(clientsTable, ["id", "code"], directClientFields),
     // "Unknown" is a sentinel written when DB#11 is absent from the ZIP.
     // Treat it the same as null so COALESCE preserves the real existing type.
     type: sql.raw(`COALESCE(NULLIF(excluded.type, 'Unknown'), clients.type)`),

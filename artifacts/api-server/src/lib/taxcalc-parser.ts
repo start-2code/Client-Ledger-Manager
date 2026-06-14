@@ -550,6 +550,11 @@ function handleDb14(rows: Record<string, unknown>[], clients: Map<string, Client
 }
 
 function handleDb15(rows: Record<string, unknown>[], clients: Map<string, ClientRecord>) {
+  if (rows.length > 0) {
+    console.log("[DEBUG DB15 HEADERS]", JSON.stringify(Object.keys(rows[0])));
+    const d3 = rows.find(r => str(r["Client code"]) === "D3HI001");
+    if (d3) console.log("[DEBUG DB15 D3HI001]", JSON.stringify(d3));
+  }
   const seen = new Set<string>();
   for (const row of rows) {
     const code = str(row["Client code"]);

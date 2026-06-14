@@ -1,4 +1,5 @@
 import XLSX from "xlsx";
+import zlib from "zlib";
 
 export interface SaReturnData {
   returnType: string;
@@ -237,12 +238,15 @@ function extractZipEntries(zipBuf: Buffer): Array<{ filename: string; data: Buff
     const extraLen = buf.readUInt16LE(off + 30);
     const commentLen = buf.readUInt16LE(off + 32);
     const localOff = buf.readUInt32LE(off + 42);
+    const compressionMethod = buf.readUInt16LE(off + 10);
     const compSize = buf.readUInt32LE(off + 20);
     const filename = buf.toString("utf8", off + 46, off + 46 + fnLen);
     const localFnLen = buf.readUInt16LE(localOff + 26);
     const localExtraLen = buf.readUInt16LE(localOff + 28);
     const dataStart = localOff + 30 + localFnLen + localExtraLen;
-    const data = buf.slice(dataStart, dataStart + compSize);
+    const rawData = buf.slice(dataStart, dataStart + compSize);
+    // Decompress if DEFLATE (method 8); leave STORE (method 0) as-is
+    const data = compressionMethod === 8 ? zlib.inflateRawSync(rawData) : rawData;
     result.push({ filename, data });
     off += 46 + fnLen + extraLen + commentLen;
   }

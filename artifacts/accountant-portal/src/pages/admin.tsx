@@ -15,6 +15,7 @@ import {
   useImportPreview,
   useImportRun,
   useImportHistory,
+  getImportHistoryQueryKey,
 } from "@workspace/api-client-react";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -160,15 +161,14 @@ function ImportPanel() {
   const previewMutation = useImportPreview();
   const runMutation = useImportRun();
 
-  // History auto-polls every 2 s while any batch is running or pending,
-  // so the status badge updates even if the user navigated away and came back.
+  // History auto-polls every 2 s while any batch is running/pending OR while
+  // this session is waiting for a batch to appear in history after triggering a run.
   const { data: historyData, isLoading: historyLoading } = useImportHistory({
     query: {
       refetchInterval: (query: any) => {
         const batches: ImportBatch[] = query.state.data?.batches ?? [];
-        return batches.some(
-          (b) => b.status === "running" || b.status === "pending"
-        )
+        return pendingBatchId !== null ||
+          batches.some((b) => b.status === "running" || b.status === "pending")
           ? 2000
           : false;
       },
@@ -242,6 +242,9 @@ function ImportPanel() {
       const data = await runMutation.mutateAsync({ data: { file: selectedFile as any } });
       setPreview(null);
       setPendingBatchId(data.batchId);
+      // Force an immediate history fetch so the running batch appears right away
+      // and the refetchInterval loop can take over from there.
+      qc.invalidateQueries({ queryKey: getImportHistoryQueryKey() });
       toast.info("Import started — this may take a few minutes…");
     } catch (err: any) {
       toast.error(err?.response?.data?.error ?? "Import failed");

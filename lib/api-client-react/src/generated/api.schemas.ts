@@ -693,6 +693,7 @@ export type ListClientsParams = {
   yearEndMonth?: string;
   engagementRecency?: ListClientsEngagementRecency;
   amlReviewDue?: boolean;
+  accountsStatus?: string;
   page?: number;
   limit?: number;
 };

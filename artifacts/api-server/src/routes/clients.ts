@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { clientsTable } from "@workspace/db";
 import { eq, ilike, or, and, count, sql, inArray } from "drizzle-orm";
-import { taxReferencesTable } from "@workspace/db";
+import { taxReferencesTable, accountsPeriodsTable } from "@workspace/db";
 import {
   ListClientsQueryParams,
   CreateClientBody,
@@ -17,7 +17,7 @@ const router = Router();
 router.get("/", async (req, res) => {
   try {
     const parsed = ListClientsQueryParams.safeParse(req.query);
-    const { search, type, engagementStatus, assignedOffice, yearEndMonth, engagementRecency, amlReviewDue, page = 1, limit = 50 } = parsed.success ? parsed.data : ({} as any);
+    const { search, type, engagementStatus, assignedOffice, yearEndMonth, engagementRecency, amlReviewDue, accountsStatus, page = 1, limit = 50 } = parsed.success ? parsed.data : ({} as any);
 
     const pageNum = Number(page) || 1;
     const limitNum = Math.min(Number(limit) || 50, 200);
@@ -52,6 +52,24 @@ router.get("/", async (req, res) => {
           sql`${clientsTable.dateOfLatestEngagement} < CURRENT_DATE - INTERVAL '12 months'`
         )!
       );
+    }
+
+    if (accountsStatus !== undefined && accountsStatus !== null) {
+      const statusValue = accountsStatus === "null" ? null : accountsStatus;
+      const matchingClients = await db
+        .select({ clientId: accountsPeriodsTable.clientId })
+        .from(accountsPeriodsTable)
+        .where(
+          statusValue === null
+            ? sql`${accountsPeriodsTable.accountsStatus} IS NULL`
+            : eq(accountsPeriodsTable.accountsStatus, statusValue)
+        );
+      const ids = matchingClients.map((r) => r.clientId).filter(Boolean) as number[];
+      if (ids.length > 0) {
+        conditions.push(inArray(clientsTable.id, ids));
+      } else {
+        conditions.push(sql`1 = 0`);
+      }
     }
 
     if (amlReviewDue === true || amlReviewDue === "true") {

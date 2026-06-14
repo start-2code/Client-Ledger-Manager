@@ -373,18 +373,20 @@ export default function Dashboard() {
                     const color = colorMap[row.status ?? ""] ?? "bg-slate-300";
                     return (
                       <div key={i}>
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${color}`} />
-                            <span className="capitalize">{row.status}</span>
+                        <Link href={`/clients?accountsStatus=${encodeURIComponent(row.status ?? "")}`}>
+                          <div className="flex items-center justify-between text-sm mb-1 cursor-pointer hover:opacity-75 transition-opacity rounded px-1 -mx-1">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${color}`} />
+                              <span className="capitalize">{row.status}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {(row.overdueCount ?? 0) > 0 && (
+                                <span className="text-xs text-destructive">{row.overdueCount} overdue</span>
+                              )}
+                              <span className="font-mono font-semibold">{row.count}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {(row.overdueCount ?? 0) > 0 && (
-                              <span className="text-xs text-destructive">{row.overdueCount} overdue</span>
-                            )}
-                            <span className="font-mono font-semibold">{row.count}</span>
-                          </div>
-                        </div>
+                        </Link>
                         <Progress value={pct} className="h-1.5" />
                       </div>
                     );
@@ -396,13 +398,15 @@ export default function Dashboard() {
                   const pct = total > 0 ? Math.round(((nullRow.count ?? 0) / total) * 100) : 0;
                   return (
                     <div>
-                      <div className="flex items-center justify-between text-sm mb-1">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-slate-200" />
-                          <span className="text-muted-foreground italic">Not submitted</span>
+                      <Link href="/clients?accountsStatus=null">
+                        <div className="flex items-center justify-between text-sm mb-1 cursor-pointer hover:opacity-75 transition-opacity rounded px-1 -mx-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-slate-200" />
+                            <span className="text-muted-foreground italic">Not submitted</span>
+                          </div>
+                          <span className="font-mono font-semibold">{nullRow.count}</span>
                         </div>
-                        <span className="font-mono font-semibold">{nullRow.count}</span>
-                      </div>
+                      </Link>
                       <Progress value={pct} className="h-1.5" />
                     </div>
                   );

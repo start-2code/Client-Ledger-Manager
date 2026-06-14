@@ -40,6 +40,7 @@ export const ListClientsQueryParams = zod.object({
   yearEndMonth: zod.coerce.string().optional(),
   engagementRecency: zod.enum(["recent", "not_recent"]).optional(),
   amlReviewDue: zod.coerce.boolean().optional(),
+  accountsStatus: zod.coerce.string().optional(),
   page: zod.coerce.number().optional(),
   limit: zod.coerce.number().optional(),
 });

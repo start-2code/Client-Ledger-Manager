@@ -10,7 +10,7 @@ import {
   companiesHouseTable,
   mtdItsaTable,
 } from "@workspace/db";
-import { eq, inArray, getTableColumns, sql } from "drizzle-orm";
+import { eq, inArray, getTableColumns, getTableName, sql } from "drizzle-orm";
 import type { ClientRecord } from "./taxcalc-parser.js";
 
 function b(v: string | null | undefined): boolean | null {
@@ -31,11 +31,18 @@ function n(v: string | null | undefined): string | null {
  * the full values object.
  */
 function makeExcludedSet(table: any, skipKeys: string[]): Record<string, any> {
+  const tableName = getTableName(table);
   const cols = getTableColumns(table) as Record<string, { name: string }>;
   return Object.fromEntries(
     Object.entries(cols)
       .filter(([key]) => !skipKeys.includes(key))
-      .map(([key, col]) => [key, sql.raw(`excluded.${col.name}`)]),
+      .map(([key, col]) => [
+        key,
+        // COALESCE preserves the existing value when the incoming value is NULL.
+        // This makes partial imports safe: only fields present in the ZIP are updated;
+        // fields from files not included in the ZIP are left untouched.
+        sql.raw(`COALESCE(excluded.${col.name}, ${tableName}.${col.name})`),
+      ]),
   );
 }
 

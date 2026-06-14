@@ -371,6 +371,8 @@ function handleDb6(rows: Record<string, unknown>[], clients: Map<string, ClientR
     c.county = str(row["County"]) ?? c.county;
     c.country = str(row["Country"]) ?? c.country;
     c.postcode = str(row["Postcode"]) ?? c.postcode;
+    console.log("------------------");
+    console.log(c.postcode);
     c.contactNumber = str(row["Contact number"]) ?? c.contactNumber;
     c.email = str(row["Email address"]) ?? c.email;
   }

@@ -242,6 +242,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/DriveSearchResponse"
 
+  /drive/folders/{folderId}:
+    delete:
+      operationId: deleteDriveFolder
+      tags: [drive]
+      summary: Delete an empty folder from Drive (service account)
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "409":
+          description: Folder is not empty
+        "500":
+          description: Error
+
   /drive/files/{fileId}:
     delete:
       operationId: deleteDriveFile

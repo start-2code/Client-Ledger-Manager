@@ -11,6 +11,7 @@ import {
   searchFilesInFolder,
   uploadFileAsUser,
   deleteFileAsUser,
+  deleteFolder,
   getRecentFiles,
   getOAuthUrl,
   exchangeCodeForTokens,
@@ -424,6 +425,21 @@ router.post("/drive/clients/:clientId/upload/:folderId", upload.single("file"), 
     res.status(201).json({ file: uploaded });
   } catch (err: any) {
     req.log.error({ err }, "Failed to upload file to drive");
+    res.status(500).json({ error: err?.message ?? "Internal server error" });
+  }
+});
+
+router.delete("/drive/folders/:folderId", async (req, res): Promise<void> => {
+  try {
+    const folderId = Array.isArray(req.params.folderId) ? req.params.folderId[0] : req.params.folderId;
+    await deleteFolder(folderId);
+    res.status(204).end();
+  } catch (err: any) {
+    if (err?.code === "NOT_EMPTY") {
+      res.status(409).json({ error: "Folder is not empty" });
+      return;
+    }
+    req.log.error({ err }, "Failed to delete drive folder");
     res.status(500).json({ error: err?.message ?? "Internal server error" });
   }
 });

@@ -189,6 +189,13 @@ export const SearchDriveClientFilesResponse = zod.object({
 });
 
 /**
+ * @summary Delete an empty folder from Drive (service account)
+ */
+export const DeleteDriveFolderParams = zod.object({
+  folderId: zod.coerce.string(),
+});
+
+/**
  * @summary Delete a file from Drive
  */
 export const DeleteDriveFileParams = zod.object({

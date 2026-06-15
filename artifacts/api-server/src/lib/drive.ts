@@ -184,6 +184,22 @@ export async function searchFilesInFolder(rootFolderId: string, query: string): 
 
 // ─── File upload (user OAuth token) ──────────────────────────────────────────
 
+export async function deleteFolder(folderId: string): Promise<void> {
+  const drive = getDriveClient();
+  // Verify it's empty first
+  const contents = await drive.files.list({
+    q: `'${folderId}' in parents and trashed=false`,
+    fields: "files(id)",
+    pageSize: 1,
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
+  });
+  if ((contents.data.files ?? []).length > 0) {
+    throw Object.assign(new Error("Folder is not empty"), { code: "NOT_EMPTY" });
+  }
+  await drive.files.delete({ fileId: folderId, supportsAllDrives: true });
+}
+
 export async function deleteFileAsUser(refreshToken: string, fileId: string): Promise<void> {
   const drive = getDriveClientFromToken(refreshToken);
   await drive.files.delete({ fileId, supportsAllDrives: true });

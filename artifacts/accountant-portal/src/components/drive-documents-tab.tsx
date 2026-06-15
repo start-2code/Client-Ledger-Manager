@@ -9,6 +9,7 @@ import {
   useGetDriveClientFiles,
   useUploadDriveFile,
   useDeleteDriveFile,
+  useDeleteDriveFolder,
   useDriveProvisionClient,
   useGetDriveStatus,
   getGetDriveClientFilesQueryKey,
@@ -115,14 +116,17 @@ interface FolderNodeProps {
 function FolderNode({ folder, clientId, depth, allFiles, onRefresh }: FolderNodeProps) {
   const [expanded, setExpanded] = useState(depth === 0);
   const [uploading, setUploading] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useUploadDriveFile();
+  const deleteFolder = useDeleteDriveFolder();
   const qc = useQueryClient();
 
   const hasChildren = folder.children && folder.children.length > 0;
 
   // Files whose parent is this folder
   const folderFiles = allFiles.filter(f => f.parents?.includes(folder.id ?? ""));
+  const isEmpty = folderFiles.length === 0 && !hasChildren;
 
   const handleUpload = async (file: File) => {
     if (!folder.id) return;
@@ -143,6 +147,21 @@ function FolderNode({ folder, clientId, depth, allFiles, onRefresh }: FolderNode
   const handleRefreshAfterDelete = () => {
     qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey(clientId) });
     onRefresh();
+  };
+
+  const handleDeleteFolder = async () => {
+    if (!folder.id) return;
+    if (!confirmingDelete) { setConfirmingDelete(true); return; }
+    try {
+      await deleteFolder.mutateAsync({ folderId: folder.id });
+      toast.success(`Deleted folder "${folder.name}"`);
+      qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey(clientId) });
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error ?? "Delete failed");
+    } finally {
+      setConfirmingDelete(false);
+    }
   };
 
   return (
@@ -190,6 +209,29 @@ function FolderNode({ folder, clientId, depth, allFiles, onRefresh }: FolderNode
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </Button>
+              )}
+              {isEmpty && (
+                <>
+                  <Button
+                    size="icon" variant="ghost"
+                    className={`h-6 w-6 transition-colors ${confirmingDelete ? "opacity-100 text-destructive hover:text-destructive" : "text-muted-foreground hover:text-destructive"}`}
+                    title={confirmingDelete ? "Click again to confirm delete" : "Delete empty folder"}
+                    disabled={deleteFolder.isPending}
+                    onClick={handleDeleteFolder}
+                  >
+                    {deleteFolder.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                  </Button>
+                  {confirmingDelete && (
+                    <Button
+                      size="icon" variant="ghost"
+                      className="h-6 w-6 text-muted-foreground"
+                      title="Cancel"
+                      onClick={() => setConfirmingDelete(false)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </>
               )}
             </>
           )}

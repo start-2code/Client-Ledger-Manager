@@ -1214,6 +1214,90 @@ export function useSearchDriveClientFiles<
 }
 
 /**
+ * @summary Delete an empty folder from Drive (service account)
+ */
+export const getDeleteDriveFolderUrl = (folderId: string) => {
+  return `/api/drive/folders/${folderId}`;
+};
+
+export const deleteDriveFolder = async (
+  folderId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteDriveFolderUrl(folderId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDriveFolderMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDriveFolder>>,
+    TError,
+    { folderId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDriveFolder>>,
+  TError,
+  { folderId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteDriveFolder"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDriveFolder>>,
+    { folderId: string }
+  > = (props) => {
+    const { folderId } = props ?? {};
+
+    return deleteDriveFolder(folderId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDriveFolderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDriveFolder>>
+>;
+
+export type DeleteDriveFolderMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete an empty folder from Drive (service account)
+ */
+export const useDeleteDriveFolder = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDriveFolder>>,
+    TError,
+    { folderId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDriveFolder>>,
+  TError,
+  { folderId: string },
+  TContext
+> => {
+  return useMutation(getDeleteDriveFolderMutationOptions(options));
+};
+
+/**
  * @summary Delete a file from Drive
  */
 export const getDeleteDriveFileUrl = (fileId: string) => {

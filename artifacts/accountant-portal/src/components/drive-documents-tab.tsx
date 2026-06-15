@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import {
   useGetDriveClientFiles,
-  useSearchDriveClientFiles,
   useUploadDriveFile,
   useDriveProvisionClient,
   useGetDriveStatus,
@@ -62,7 +61,7 @@ function FolderNode({ folder, clientId, depth, onRefresh }: FolderNodeProps) {
       const formData = new FormData();
       formData.append("file", file);
       await upload.mutateAsync({ clientId, folderId: folder.id, data: { file: file as any } });
-      qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey({ clientId }) });
+      qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey(clientId) });
       onRefresh();
       toast.success(`Uploaded "${file.name}"`);
     } catch (err: any) {
@@ -145,17 +144,13 @@ interface Props {
 export function DriveDocumentsTab({ clientId, clientName }: Props) {
   const qc = useQueryClient();
   const { data: statusData } = useGetDriveStatus({ query: { refetchInterval: false } } as any);
-  const { data, isLoading, refetch } = useGetDriveClientFiles({ clientId });
+  const { data, isLoading, refetch } = useGetDriveClientFiles(clientId);
   const provision = useDriveProvisionClient();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<DriveFile[] | null>(null);
   const [provisioning, setProvisioning] = useState(false);
-
-  const doSearch = useSearchDriveClientFiles({ clientId, q: searchQuery }, {
-    query: { enabled: false },
-  } as any);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) { setSearchResults(null); return; }
@@ -175,7 +170,8 @@ export function DriveDocumentsTab({ clientId, clientName }: Props) {
     setProvisioning(true);
     try {
       await provision.mutateAsync({ clientId });
-      qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey({ clientId }) });
+      await qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey(clientId) });
+      await refetch();
       toast.success("Drive folder created");
     } catch (err: any) {
       toast.error(err?.response?.data?.error ?? "Provisioning failed");
@@ -292,7 +288,7 @@ export function DriveDocumentsTab({ clientId, clientName }: Props) {
                     folder={folder}
                     clientId={clientId}
                     depth={0}
-                    onRefresh={() => qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey({ clientId }) })}
+                    onRefresh={() => qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey(clientId) })}
                   />
                 ))}
               </div>

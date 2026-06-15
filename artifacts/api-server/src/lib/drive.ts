@@ -209,11 +209,13 @@ export async function uploadFileAsUser(
   return res.data as DriveFile;
 }
 
-export async function getRecentFiles(rootFolderId: string, maxResults = 20): Promise<DriveFile[]> {
+export async function getRecentFiles(folderIds: string[], maxResults = 20): Promise<DriveFile[]> {
+  if (folderIds.length === 0) return [];
   const drive = getDriveClient();
+  // Build an OR query across all known folder IDs (Drive doesn't support 'in ancestors')
+  const parentsClauses = folderIds.map(id => `'${id}' in parents`).join(" or ");
   const res = await drive.files.list({
-    // 'in ancestors' searches recursively through all subfolders
-    q: `'${rootFolderId}' in ancestors and mimeType!='application/vnd.google-apps.folder' and trashed=false`,
+    q: `(${parentsClauses}) and mimeType!='application/vnd.google-apps.folder' and trashed=false`,
     fields: "files(id,name,mimeType,size,modifiedTime,webViewLink,parents)",
     orderBy: "modifiedTime desc",
     pageSize: maxResults,

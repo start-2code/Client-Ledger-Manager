@@ -323,12 +323,8 @@ router.get("/drive/clients/:clientId/files", async (req, res): Promise<void> => 
       return;
     }
 
-    const [subFolders, recentFiles] = await Promise.all([
-      listFoldersInFolder(client.driveFolderId),
-      getRecentFiles(client.driveFolderId, 20),
-    ]);
-
-    // Build two-level folder tree
+    // Build two-level folder tree first so we have all folder IDs for the files query
+    const subFolders = await listFoldersInFolder(client.driveFolderId);
     const folders = await Promise.all(
       subFolders.map(async (f) => {
         const children = await listFoldersInFolder(f.id);
@@ -340,6 +336,14 @@ router.get("/drive/clients/:clientId/files", async (req, res): Promise<void> => 
         };
       })
     );
+
+    // Collect all folder IDs (root + level-1 + level-2) for recursive file listing
+    const allFolderIds = [
+      client.driveFolderId,
+      ...subFolders.map(f => f.id),
+      ...folders.flatMap(f => f.children.map(c => c.id)),
+    ];
+    const recentFiles = await getRecentFiles(allFolderIds, 20);
 
     res.setHeader("Cache-Control", "no-store");
     res.json({ folders, recentFiles, clientFolderId: client.driveFolderId });

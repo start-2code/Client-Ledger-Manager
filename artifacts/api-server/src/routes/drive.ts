@@ -86,6 +86,52 @@ async function stampFolderTree(
   }
 }
 
+interface FolderResult {
+  id: string;
+  name: string;
+  webViewLink: string | null;
+  children: FolderResult[];
+}
+
+/**
+ * Lists folders under parentDriveFolderId, creating any template folders that are
+ * missing from Drive. Extra Drive folders (not in template) are also included.
+ * Recurses for children using each folder's matching template node (if any).
+ */
+async function ensureAndListFolders(
+  parentDriveFolderId: string,
+  templateNodes: TemplateNode[]
+): Promise<FolderResult[]> {
+  const existing = await listFoldersInFolder(parentDriveFolderId);
+  const byName = new Map(existing.map((f) => [f.name.toLowerCase(), f]));
+
+  for (const node of templateNodes) {
+    if (!byName.has(node.name.toLowerCase())) {
+      const newId = await createFolder(node.name, parentDriveFolderId);
+      const newFolder = { id: newId, name: node.name, mimeType: "application/vnd.google-apps.folder", webViewLink: undefined };
+      existing.push(newFolder);
+      byName.set(node.name.toLowerCase(), newFolder);
+    }
+  }
+
+  return Promise.all(
+    existing.map(async (f) => {
+      const templateNode = templateNodes.find((n) => n.name.toLowerCase() === f.name.toLowerCase());
+      const children = await ensureAndListFolders(f.id, templateNode?.children ?? []);
+      return { id: f.id, name: f.name, webViewLink: f.webViewLink ?? null, children };
+    })
+  );
+}
+
+function collectFolderIds(folders: FolderResult[]): string[] {
+  const ids: string[] = [];
+  for (const f of folders) {
+    ids.push(f.id);
+    ids.push(...collectFolderIds(f.children));
+  }
+  return ids;
+}
+
 // ─── routes ─────────────────────────────────────────────────────────────────
 
 router.get("/drive/status", async (req, res): Promise<void> => {
@@ -324,26 +370,12 @@ router.get("/drive/clients/:clientId/files", async (req, res): Promise<void> => 
       return;
     }
 
-    // Build two-level folder tree first so we have all folder IDs for the files query
-    const subFolders = await listFoldersInFolder(client.driveFolderId);
-    const folders = await Promise.all(
-      subFolders.map(async (f) => {
-        const children = await listFoldersInFolder(f.id);
-        return {
-          id: f.id,
-          name: f.name,
-          webViewLink: f.webViewLink ?? null,
-          children: children.map((c) => ({ id: c.id, name: c.name, webViewLink: c.webViewLink ?? null, children: [] })),
-        };
-      })
-    );
+    // Ensure all template folders exist in Drive (creates missing ones), then list
+    const template = await getTemplateTree();
+    const folders = await ensureAndListFolders(client.driveFolderId, template);
 
-    // Collect all folder IDs (root + level-1 + level-2) for recursive file listing
-    const allFolderIds = [
-      client.driveFolderId,
-      ...subFolders.map(f => f.id),
-      ...folders.flatMap(f => f.children.map(c => c.id)),
-    ];
+    // Collect all folder IDs recursively for the files query
+    const allFolderIds = [client.driveFolderId, ...collectFolderIds(folders)];
     const recentFiles = await getRecentFiles(allFolderIds, 20);
 
     res.setHeader("Cache-Control", "no-store");

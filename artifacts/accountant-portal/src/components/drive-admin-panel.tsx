@@ -80,16 +80,25 @@ export function DriveAdminPanel() {
   };
 
   const handleConnectGoogle = async () => {
+    // Open the tab immediately (synchronous with user click) to avoid popup blockers,
+    // then navigate it once the URL arrives from the server.
+    const tab = window.open("", "_blank");
     try {
       const res = await fetch("/api/drive/oauth/url");
       if (!res.ok) {
+        tab?.close();
         const err = await res.json().catch(() => ({}));
         toast.error(err.error ?? "Could not generate OAuth URL — check GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET secrets are set");
         return;
       }
       const { url } = await res.json();
-      window.location.href = url;
+      if (tab) {
+        tab.location.href = url;
+      } else {
+        window.open(url, "_blank");
+      }
     } catch {
+      tab?.close();
       toast.error("Failed to initiate Google sign-in");
     }
   };

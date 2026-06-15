@@ -694,6 +694,17 @@ export interface DriveStatusResponse {
   rootFolderName?: string;
   /** @nullable */
   rootFolderId?: string | null;
+  oauthConnected?: boolean;
+  /** @nullable */
+  oauthEmail?: string | null;
+}
+
+export interface DriveOAuthUrlResponse {
+  url: string;
+}
+
+export interface DriveOAuthDisconnectResponse {
+  ok: boolean;
 }
 
 export interface DriveSettingsBody {

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -452,6 +452,24 @@ function ImportPanel() {
 }
 
 export default function Admin() {
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("tab") ?? "import";
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab) setActiveTab(tab);
+  }, []);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", value);
+    window.history.replaceState({}, "", url.toString());
+  };
+
   return (
     <div>
       <div className="mb-8 flex items-start gap-4">
@@ -466,7 +484,7 @@ export default function Admin() {
         </div>
       </div>
 
-      <Tabs defaultValue="import">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="mb-6 flex-wrap h-auto gap-1">
           <TabsTrigger value="import">
             <Upload className="h-3.5 w-3.5 mr-1.5" />

@@ -1,32 +1,34 @@
 import { google } from "googleapis";
 import { logger } from "./logger";
 
-function getAuth() {
+// ─── Service Account helpers ─────────────────────────────────────────────────
+
+function getServiceAccountKey(): any {
   const keyJson = process.env["GOOGLE_SERVICE_ACCOUNT_KEY"];
-  if (!keyJson) {
-    throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY environment variable is not set");
-  }
-  let key: any;
+  if (!keyJson) throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY environment variable is not set");
   try {
-    key = JSON.parse(keyJson);
+    return JSON.parse(keyJson);
   } catch {
     throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY is not valid JSON");
   }
-  const auth = new google.auth.GoogleAuth({
+}
+
+function getServiceAccountAuth() {
+  const key = getServiceAccountKey();
+  return new google.auth.GoogleAuth({
     credentials: key,
     scopes: ["https://www.googleapis.com/auth/drive"],
   });
-  return auth;
 }
 
 export function getDriveClient() {
-  const auth = getAuth();
+  const auth = getServiceAccountAuth();
   return google.drive({ version: "v3", auth });
 }
 
 export async function testConnection(): Promise<{ ok: boolean; email?: string; error?: string }> {
   try {
-    const auth = getAuth();
+    const auth = getServiceAccountAuth();
     const client = await auth.getClient();
     const tokenInfo = await (client as any).getAccessToken();
     if (!tokenInfo?.token) throw new Error("No access token returned");
@@ -38,6 +40,49 @@ export async function testConnection(): Promise<{ ok: boolean; email?: string; e
     return { ok: false, error: err?.message ?? "Unknown error" };
   }
 }
+
+// ─── OAuth2 helpers ───────────────────────────────────────────────────────────
+
+function getOAuth2Client() {
+  const clientId = process.env["GOOGLE_OAUTH_CLIENT_ID"];
+  const clientSecret = process.env["GOOGLE_OAUTH_CLIENT_SECRET"];
+  if (!clientId || !clientSecret) {
+    throw new Error("GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be set");
+  }
+  const domain = (process.env["REPLIT_DOMAINS"] ?? "").split(",")[0].trim();
+  const redirectUri = `https://${domain}/api/drive/oauth/callback`;
+  return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+}
+
+export function getOAuthUrl(): string {
+  const oauth2 = getOAuth2Client();
+  return oauth2.generateAuthUrl({
+    access_type: "offline",
+    prompt: "consent",
+    scope: ["https://www.googleapis.com/auth/drive"],
+  });
+}
+
+export async function exchangeCodeForTokens(code: string): Promise<{ refreshToken: string; email: string }> {
+  const oauth2 = getOAuth2Client();
+  const { tokens } = await oauth2.getToken(code);
+  if (!tokens.refresh_token) throw new Error("No refresh token returned — try disconnecting and reconnecting");
+  oauth2.setCredentials(tokens);
+  const oauth2Api = google.oauth2({ version: "v2", auth: oauth2 });
+  const userInfo = await oauth2Api.userinfo.get();
+  return {
+    refreshToken: tokens.refresh_token,
+    email: userInfo.data.email ?? "unknown",
+  };
+}
+
+function getDriveClientFromToken(refreshToken: string) {
+  const oauth2 = getOAuth2Client();
+  oauth2.setCredentials({ refresh_token: refreshToken });
+  return google.drive({ version: "v3", auth: oauth2 });
+}
+
+// ─── Folder management (service account) ─────────────────────────────────────
 
 export async function getOrCreateRootFolder(rootFolderName: string): Promise<string> {
   const drive = getDriveClient();
@@ -126,13 +171,16 @@ export async function searchFilesInFolder(rootFolderId: string, query: string): 
   return (res.data.files ?? []) as DriveFile[];
 }
 
-export async function uploadFile(
+// ─── File upload (user OAuth token) ──────────────────────────────────────────
+
+export async function uploadFileAsUser(
+  refreshToken: string,
   folderId: string,
   fileName: string,
   mimeType: string,
   buffer: Buffer
 ): Promise<DriveFile> {
-  const drive = getDriveClient();
+  const drive = getDriveClientFromToken(refreshToken);
   const { Readable } = await import("stream");
   const stream = Readable.from(buffer);
   const res = await drive.files.create({

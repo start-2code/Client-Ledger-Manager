@@ -1,16 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2, XCircle, Loader2, HardDrive, FolderTree, Settings, Users, Zap,
+  LogIn, LogOut, Upload,
 } from "lucide-react";
 import {
   useGetDriveStatus,
   useUpdateDriveSettings,
   useGetDriveProvisionStats,
   useDriveProvisionAll,
+  useDisconnectDriveOAuth,
   getGetDriveStatusQueryKey,
   getGetDriveProvisionStatsQueryKey,
 } from "@workspace/api-client-react";
@@ -20,14 +22,36 @@ import { DriveFolderTreeEditor } from "./drive-folder-tree-editor";
 
 export function DriveAdminPanel() {
   const qc = useQueryClient();
-  const { data: status, isLoading: statusLoading } = useGetDriveStatus({ query: { refetchInterval: false } } as any);
+  const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useGetDriveStatus({ query: { refetchInterval: false } } as any);
   const { data: stats, isLoading: statsLoading } = useGetDriveProvisionStats();
   const updateSettings = useUpdateDriveSettings();
   const provisionAll = useDriveProvisionAll();
+  const disconnectOAuth = useDisconnectDriveOAuth();
 
   const [editingRootName, setEditingRootName] = useState(false);
   const [rootName, setRootName] = useState("");
   const [provisioning, setProvisioning] = useState(false);
+
+  // Handle OAuth redirect result
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const oauthResult = params.get("oauth");
+    if (oauthResult === "success") {
+      toast.success("Google Account connected for uploads");
+      refetchStatus();
+      // Clean up URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete("oauth");
+      window.history.replaceState({}, "", url.toString());
+    } else if (oauthResult === "error") {
+      const msg = params.get("msg") ?? "OAuth failed";
+      toast.error(`Connection failed: ${msg}`);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("oauth");
+      url.searchParams.delete("msg");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   const handleSaveRootName = async () => {
     if (!rootName.trim()) return;
@@ -55,17 +79,48 @@ export function DriveAdminPanel() {
     }
   };
 
+  const handleConnectGoogle = async () => {
+    try {
+      const res = await fetch("/api/drive/oauth/url");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error ?? "Could not generate OAuth URL — check GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET secrets are set");
+        return;
+      }
+      const { url } = await res.json();
+      window.location.href = url;
+    } catch {
+      toast.error("Failed to initiate Google sign-in");
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    if (!confirm("Disconnect your Google Account? Uploads will stop working until you reconnect.")) return;
+    try {
+      await disconnectOAuth.mutateAsync();
+      qc.invalidateQueries({ queryKey: getGetDriveStatusQueryKey() });
+      toast.success("Google Account disconnected");
+    } catch {
+      toast.error("Failed to disconnect");
+    }
+  };
+
+  const oauthSecretsSet = (() => {
+    // We can't check env vars from the frontend, so just try based on error from status
+    return true;
+  })();
+
   return (
     <div className="space-y-6">
-      {/* Connection status card */}
+      {/* Service account connection */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <HardDrive className="h-4 w-4" />
-            Connection Status
+            Service Account — Folder Management
           </CardTitle>
           <CardDescription>
-            Connect using a Google Service Account. Set the <code className="text-xs bg-muted px-1 rounded">GOOGLE_SERVICE_ACCOUNT_KEY</code> environment secret to the full JSON key from Google Cloud Console.
+            Used for creating and listing client folders. Set <code className="text-xs bg-muted px-1 rounded">GOOGLE_SERVICE_ACCOUNT_KEY</code> secret to the full JSON key.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -96,7 +151,7 @@ export function DriveAdminPanel() {
                   <li>Go to <strong>console.cloud.google.com</strong> → create a project</li>
                   <li>Enable the <strong>Google Drive API</strong></li>
                   <li>Create a <strong>Service Account</strong> → create a JSON key</li>
-                  <li>Add the secret <code className="bg-amber-100 px-1 rounded">GOOGLE_SERVICE_ACCOUNT_KEY</code> with the full JSON contents</li>
+                  <li>Add secret <code className="bg-amber-100 px-1 rounded">GOOGLE_SERVICE_ACCOUNT_KEY</code> with the full JSON contents</li>
                   <li>Share a Google Drive folder with the service account email</li>
                   <li>Set the root folder name below to match</li>
                 </ol>
@@ -146,6 +201,72 @@ export function DriveAdminPanel() {
         </CardContent>
       </Card>
 
+      {/* Google Account for uploads */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            Google Account — File Uploads
+          </CardTitle>
+          <CardDescription>
+            Uploads are made as your personal Google account (which has storage quota). Requires <code className="text-xs bg-muted px-1 rounded">GOOGLE_OAUTH_CLIENT_ID</code> and <code className="text-xs bg-muted px-1 rounded">GOOGLE_OAUTH_CLIENT_SECRET</code> secrets.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {statusLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Checking…
+            </div>
+          ) : status?.oauthConnected ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                <div>
+                  <span className="font-medium text-emerald-700">Connected</span>
+                  {status.oauthEmail && <span className="text-muted-foreground ml-2">as {status.oauthEmail}</span>}
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={handleDisconnectGoogle}
+                disabled={disconnectOAuth.isPending}
+              >
+                {disconnectOAuth.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><LogOut className="h-3.5 w-3.5 mr-1.5" />Disconnect</>}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <XCircle className="h-5 w-5 text-amber-500 shrink-0" />
+                <span className="text-amber-700 font-medium">Not connected — uploads will fail</span>
+              </div>
+              <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 space-y-1">
+                <p className="font-medium text-sm">One-time setup (2 minutes):</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>In Google Cloud Console → <strong>APIs &amp; Services → Credentials</strong></li>
+                  <li>Click <strong>+ Create Credentials → OAuth 2.0 Client ID</strong></li>
+                  <li>Application type: <strong>Web application</strong></li>
+                  <li>Under "Authorized redirect URIs" add:<br />
+                    <code className="bg-blue-100 px-1 rounded break-all text-xs">
+                      https://{window.location.hostname}/api/drive/oauth/callback
+                    </code>
+                  </li>
+                  <li>Copy the Client ID and Client Secret</li>
+                  <li>Add secrets: <code className="bg-blue-100 px-1 rounded">GOOGLE_OAUTH_CLIENT_ID</code> and <code className="bg-blue-100 px-1 rounded">GOOGLE_OAUTH_CLIENT_SECRET</code></li>
+                  <li>Restart the API server, then click Connect below</li>
+                </ol>
+              </div>
+              <Button onClick={handleConnectGoogle} className="w-full">
+                <LogIn className="h-4 w-4 mr-2" />
+                Connect Google Account
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Provisioning stats */}
       <Card>
         <CardHeader>
@@ -190,7 +311,7 @@ export function DriveAdminPanel() {
             </Button>
           )}
           {!status?.connected && (
-            <p className="text-xs text-muted-foreground text-center">Connect to Google Drive above before provisioning</p>
+            <p className="text-xs text-muted-foreground text-center">Connect service account above before provisioning</p>
           )}
           {(stats?.unprovisioned ?? 0) === 0 && (stats?.total ?? 0) > 0 && (
             <div className="flex items-center justify-center gap-2 text-sm text-emerald-600">

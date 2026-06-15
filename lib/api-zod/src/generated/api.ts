@@ -16,6 +16,22 @@ export const GetDriveStatusResponse = zod.object({
   error: zod.string().nullish(),
   rootFolderName: zod.string().optional(),
   rootFolderId: zod.string().nullish(),
+  oauthConnected: zod.boolean().optional(),
+  oauthEmail: zod.string().nullish(),
+});
+
+/**
+ * @summary Get Google OAuth2 authorization URL for upload access
+ */
+export const GetDriveOAuthUrlResponse = zod.object({
+  url: zod.string(),
+});
+
+/**
+ * @summary Disconnect stored Google OAuth credentials
+ */
+export const DisconnectDriveOAuthResponse = zod.object({
+  ok: zod.boolean(),
 });
 
 /**
@@ -31,6 +47,8 @@ export const UpdateDriveSettingsResponse = zod.object({
   error: zod.string().nullish(),
   rootFolderName: zod.string().optional(),
   rootFolderId: zod.string().nullish(),
+  oauthConnected: zod.boolean().optional(),
+  oauthEmail: zod.string().nullish(),
 });
 
 /**

@@ -15,4 +15,7 @@ export interface DriveStatusResponse {
   rootFolderName?: string;
   /** @nullable */
   rootFolderId?: string | null;
+  oauthConnected?: boolean;
+  /** @nullable */
+  oauthEmail?: string | null;
 }

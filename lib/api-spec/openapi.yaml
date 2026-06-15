@@ -41,6 +41,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/DriveStatusResponse"
 
+  /drive/oauth/url:
+    get:
+      operationId: getDriveOAuthUrl
+      tags: [drive]
+      summary: Get Google OAuth2 authorization URL for upload access
+      responses:
+        "200":
+          description: OAuth URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveOAuthUrlResponse"
+
+  /drive/oauth/disconnect:
+    delete:
+      operationId: disconnectDriveOAuth
+      tags: [drive]
+      summary: Disconnect stored Google OAuth credentials
+      responses:
+        "200":
+          description: Disconnected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveOAuthDisconnectResponse"
+
   /drive/settings:
     put:
       operationId: updateDriveSettings
@@ -2039,6 +2065,24 @@ components:
           type: string
         rootFolderId:
           type: ["string", "null"]
+        oauthConnected:
+          type: boolean
+        oauthEmail:
+          type: ["string", "null"]
+
+    DriveOAuthUrlResponse:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+
+    DriveOAuthDisconnectResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
 
     DriveSettingsBody:
       type: object

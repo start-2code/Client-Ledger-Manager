@@ -33,6 +33,8 @@ import type {
   DriveClientFilesResponse,
   DriveFolderTemplateNode,
   DriveFolderTemplateResponse,
+  DriveOAuthDisconnectResponse,
+  DriveOAuthUrlResponse,
   DriveProvisionAllResponse,
   DriveProvisionResponse,
   DriveProvisionStatsResponse,
@@ -161,6 +163,165 @@ export function useGetDriveStatus<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get Google OAuth2 authorization URL for upload access
+ */
+export const getGetDriveOAuthUrlUrl = () => {
+  return `/api/drive/oauth/url`;
+};
+
+export const getDriveOAuthUrl = async (
+  options?: RequestInit,
+): Promise<DriveOAuthUrlResponse> => {
+  return customFetch<DriveOAuthUrlResponse>(getGetDriveOAuthUrlUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDriveOAuthUrlQueryKey = () => {
+  return [`/api/drive/oauth/url`] as const;
+};
+
+export const getGetDriveOAuthUrlQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDriveOAuthUrl>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveOAuthUrl>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDriveOAuthUrlQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDriveOAuthUrl>>
+  > = ({ signal }) => getDriveOAuthUrl({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveOAuthUrl>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDriveOAuthUrlQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDriveOAuthUrl>>
+>;
+export type GetDriveOAuthUrlQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get Google OAuth2 authorization URL for upload access
+ */
+
+export function useGetDriveOAuthUrl<
+  TData = Awaited<ReturnType<typeof getDriveOAuthUrl>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveOAuthUrl>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDriveOAuthUrlQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Disconnect stored Google OAuth credentials
+ */
+export const getDisconnectDriveOAuthUrl = () => {
+  return `/api/drive/oauth/disconnect`;
+};
+
+export const disconnectDriveOAuth = async (
+  options?: RequestInit,
+): Promise<DriveOAuthDisconnectResponse> => {
+  return customFetch<DriveOAuthDisconnectResponse>(
+    getDisconnectDriveOAuthUrl(),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDisconnectDriveOAuthMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof disconnectDriveOAuth>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof disconnectDriveOAuth>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["disconnectDriveOAuth"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof disconnectDriveOAuth>>,
+    void
+  > = () => {
+    return disconnectDriveOAuth(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DisconnectDriveOAuthMutationResult = NonNullable<
+  Awaited<ReturnType<typeof disconnectDriveOAuth>>
+>;
+
+export type DisconnectDriveOAuthMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Disconnect stored Google OAuth credentials
+ */
+export const useDisconnectDriveOAuth = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof disconnectDriveOAuth>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof disconnectDriveOAuth>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getDisconnectDriveOAuthMutationOptions(options));
+};
 
 /**
  * @summary Update Drive settings

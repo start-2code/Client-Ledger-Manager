@@ -9,8 +9,10 @@ import {
   listFilesInFolder,
   listFoldersInFolder,
   searchFilesInFolder,
-  uploadFile,
+  uploadFileAsUser,
   getRecentFiles,
+  getOAuthUrl,
+  exchangeCodeForTokens,
 } from "../lib/drive";
 import { logger } from "../lib/logger";
 
@@ -95,9 +97,54 @@ router.get("/drive/status", async (req, res): Promise<void> => {
       error: result.error ?? null,
       rootFolderName: settings.rootFolderName,
       rootFolderId: settings.rootFolderId ?? null,
+      oauthConnected: !!settings.oauthRefreshToken,
+      oauthEmail: settings.oauthEmail ?? null,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to get drive status");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── OAuth2 endpoints ────────────────────────────────────────────────────────
+
+router.get("/drive/oauth/url", async (req, res): Promise<void> => {
+  try {
+    const url = getOAuthUrl();
+    res.json({ url });
+  } catch (err: any) {
+    req.log.error({ err }, "Failed to generate OAuth URL");
+    res.status(500).json({ error: err?.message ?? "Internal server error" });
+  }
+});
+
+router.get("/drive/oauth/callback", async (req, res): Promise<void> => {
+  try {
+    const code = typeof req.query.code === "string" ? req.query.code : null;
+    if (!code) { res.status(400).send("Missing code parameter"); return; }
+    const { refreshToken, email } = await exchangeCodeForTokens(code);
+    const settings = await getSettings();
+    await db
+      .update(driveSettingsTable)
+      .set({ oauthRefreshToken: refreshToken, oauthEmail: email })
+      .where(eq(driveSettingsTable.id, settings.id));
+    res.redirect("/admin?tab=drive&oauth=success");
+  } catch (err: any) {
+    req.log.error({ err }, "OAuth callback failed");
+    res.redirect(`/admin?tab=drive&oauth=error&msg=${encodeURIComponent(err?.message ?? "Unknown error")}`);
+  }
+});
+
+router.delete("/drive/oauth/disconnect", async (req, res): Promise<void> => {
+  try {
+    const settings = await getSettings();
+    await db
+      .update(driveSettingsTable)
+      .set({ oauthRefreshToken: null, oauthEmail: null })
+      .where(eq(driveSettingsTable.id, settings.id));
+    res.json({ ok: true });
+  } catch (err) {
+    req.log.error({ err }, "Failed to disconnect OAuth");
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -329,18 +376,17 @@ router.post("/drive/clients/:clientId/upload/:folderId", upload.single("file"), 
     const [client] = await db.select({ driveFolderId: clientsTable.driveFolderId }).from(clientsTable).where(eq(clientsTable.id, clientId));
     if (!client?.driveFolderId) { res.status(404).json({ error: "Client has no Drive folder" }); return; }
 
-    const uploaded = await uploadFile(folderId, req.file.originalname, req.file.mimetype, req.file.buffer);
+    const settings = await getSettings();
+    if (!settings.oauthRefreshToken) {
+      res.status(403).json({ error: "No Google Account connected for uploads. Go to Admin → Drive Folders → connect your Google Account to enable uploads." });
+      return;
+    }
+
+    const uploaded = await uploadFileAsUser(settings.oauthRefreshToken, folderId, req.file.originalname, req.file.mimetype, req.file.buffer);
     res.status(201).json({ file: uploaded });
   } catch (err: any) {
     req.log.error({ err }, "Failed to upload file to drive");
-    const msg: string = err?.message ?? "";
-    if (msg.includes("storage quota") || msg.includes("storageQuotaExceeded")) {
-      res.status(403).json({
-        error: "Upload failed: the root folder must be inside a Google Shared Drive. Service accounts cannot store files in a personal My Drive. Create a Shared Drive, add the service account as a member, move the root folder there, then re-save settings.",
-      });
-      return;
-    }
-    res.status(500).json({ error: msg || "Internal server error" });
+    res.status(500).json({ error: err?.message ?? "Internal server error" });
   }
 });
 

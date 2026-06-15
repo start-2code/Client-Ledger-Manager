@@ -39,6 +39,8 @@ export * from "./driveFile";
 export * from "./driveFolder";
 export * from "./driveFolderTemplateNode";
 export * from "./driveFolderTemplateResponse";
+export * from "./driveOAuthDisconnectResponse";
+export * from "./driveOAuthUrlResponse";
 export * from "./driveProvisionResponse";
 export * from "./driveProvisionStatsResponse";
 export * from "./driveSearchResponse";

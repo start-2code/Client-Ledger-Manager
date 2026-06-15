@@ -1,0 +1,94 @@
+Library
+Commands
+.agents
+.config
+.git
+artifacts
+accountant-portal
+api-server
+.replit-artifact
+dist
+node_modules
+src
+lib
+.gitkeep
+logger.ts
+taxcalc-importer.ts
+taxcalc-parser.ts
+middlewares
+routes
+app.ts
+index.ts
+build.mjs
+package.json
+tsconfig.json
+mockup-sandbox
+attached_assets
+OneDrive_1_6-10-2026_1781125074124.zip
+Pasted--staff-Internal-staff-members-Column-Type-Notes-id-UUID_1781027409807.txt
+lib
+scripts
+.gitignore
+.npmrc
+ClearBooks_Field_Mapping_and_Workflows.md
+replit.md
+tsconfig.base.json
+tsconfig.json
+Packager files
+node_modules
+package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+Config files
+.replit
+.replitignore
+# ClearBooks — Field Mapping & Practice Workflow Guide
+## Suggested Practice Workflows
+
+The data you now hold is rich enough to power the following operational workflows. Each one can be built as a filtered view or report in the portal.
+
+---
+
+### WF-01 — AML Review List
+
+**Trigger:** AML Last Check Date is more than 12 months ago, OR AML Status is not "Compliant" / "Verified"
+
+**What to do:** Generate a list of clients due for AML refresh, grouped by Assigned Office. Flag clients with no AML check date at all as highest priority.
+
+**Fields used:** `aml_last_check_date`, `aml_status`, `assigned_office`, `name`, `type`
+
+**Why it matters:** A regulatory requirement. Missing AML checks expose the practice to prosecution.
+
+---
+
+### WF-02 — Engagement Letter & Consent Tracker
+
+**Trigger:** `engagement_status` is not "Engaged", OR `consent_status` is not current, OR `date_of_latest_engagement` is more than 12 months ago
+
+**What to do:** Produce a chase list. Flag clients where `date_of_client_loss` is set (ex-clients) to exclude them automatically.
+
+**Fields used:** `engagement_status`, `consent_status`, `consent_type`, `date_of_latest_engagement`, `date_of_client_loss`
+
+**Why it matters:** Engagements need annual renewal. Outdated letters create liability if a dispute arises.
+
+---
+
+### WF-03 — SA Return Filing Progress
+
+**Trigger:** Tax year = current (2024/25). `return_filed_successfully` is false or null.
+
+**What to do:** Segment by `return_status` (Not started / In progress / Ready to file / Awaiting client / Submitted). Show total tax due so the team can prioritise high-value returns. Flag returns where `date_last_saved` has not moved in 14+ days (stalled).
+
+**Fields used:** `tax_year`, `return_status`, `return_filed_successfully`, `date_filed_to_hmrc`, `date_last_saved`, `total_tax_due`, `has_repayment`, `repayment_amount`
+
+**Why it matters:** Direct visibility of the SA filing pipeline. Stalled returns surface before the 31 January deadline.
+
+---
+
+### WF-04 — CT Payment Deadline Radar
+
+**Trigger:** `ct_payment_deadline` is within the next 90 days AND `return_filed_successfully` is false
+
+**What to do:** Red / amber / green banding by days remaining (≤30 / ≤60 / ≤90). Show `net_ct_liability` and `corporation_tax_outstanding` so the client can be alerted to the amount due.
+Secrets
+GOOGLE_SERVICE_ACCOUNT_KEY

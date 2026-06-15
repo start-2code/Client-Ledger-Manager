@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRoute, Link, useLocation } from "wouter";
 import {
   useGetClient,
@@ -76,6 +76,18 @@ export default function ClientDetail() {
   const [, navigate] = useLocation();
   const id = parseInt(params?.id || "0", 10);
   const queryClient = useQueryClient();
+
+  const [activeTab, setActiveTab] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get("tab") ?? "contact";
+  });
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", value);
+    window.history.replaceState({}, "", url.toString());
+  };
 
   const { data: taskStatusData } = useListDropdownOptions({ category: "task_status" });
   const taskStatuses = taskStatusData?.options.map((o) => o.value) ?? ["Planned", "In Progress", "Complete"];
@@ -241,7 +253,7 @@ export default function ClientDetail() {
         </div>
       </div>
 
-      <Tabs defaultValue="contact" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="flex flex-wrap h-auto gap-1 mb-2">
           <TabsTrigger value="contact" className="text-xs sm:text-sm">Contact</TabsTrigger>
           <TabsTrigger value="financial" className="text-xs sm:text-sm">Financials</TabsTrigger>

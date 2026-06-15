@@ -242,6 +242,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/DriveSearchResponse"
 
+  /drive/files/{fileId}:
+    delete:
+      operationId: deleteDriveFile
+      tags: [drive]
+      summary: Delete a file from Drive
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: No OAuth account connected
+        "500":
+          description: Error
+
   /drive/clients/{clientId}/upload/{folderId}:
     post:
       operationId: uploadDriveFile
@@ -2153,6 +2172,11 @@ components:
           type: ["string", "null"]
         webViewLink:
           type: ["string", "null"]
+        parents:
+          type: array
+          items:
+            type: string
+          nullable: true
 
     DriveFolder:
       type: object

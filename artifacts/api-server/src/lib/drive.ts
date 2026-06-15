@@ -184,6 +184,11 @@ export async function searchFilesInFolder(rootFolderId: string, query: string): 
 
 // ─── File upload (user OAuth token) ──────────────────────────────────────────
 
+export async function deleteFileAsUser(refreshToken: string, fileId: string): Promise<void> {
+  const drive = getDriveClientFromToken(refreshToken);
+  await drive.files.delete({ fileId, supportsAllDrives: true });
+}
+
 export async function uploadFileAsUser(
   refreshToken: string,
   folderId: string,

@@ -10,6 +10,7 @@ import {
   listFoldersInFolder,
   searchFilesInFolder,
   uploadFileAsUser,
+  deleteFileAsUser,
   getRecentFiles,
   getOAuthUrl,
   exchangeCodeForTokens,
@@ -391,6 +392,22 @@ router.post("/drive/clients/:clientId/upload/:folderId", upload.single("file"), 
     res.status(201).json({ file: uploaded });
   } catch (err: any) {
     req.log.error({ err }, "Failed to upload file to drive");
+    res.status(500).json({ error: err?.message ?? "Internal server error" });
+  }
+});
+
+router.delete("/drive/files/:fileId", async (req, res): Promise<void> => {
+  try {
+    const fileId = Array.isArray(req.params.fileId) ? req.params.fileId[0] : req.params.fileId;
+    const settings = await getSettings();
+    if (!settings.oauthRefreshToken) {
+      res.status(403).json({ error: "No Google Account connected. Go to Admin → Drive Folders to connect." });
+      return;
+    }
+    await deleteFileAsUser(settings.oauthRefreshToken, fileId);
+    res.status(204).end();
+  } catch (err: any) {
+    req.log.error({ err }, "Failed to delete drive file");
     res.status(500).json({ error: err?.message ?? "Internal server error" });
   }
 });

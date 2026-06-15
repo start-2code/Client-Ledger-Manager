@@ -16,4 +16,5 @@ export interface DriveFile {
   modifiedTime?: string | null;
   /** @nullable */
   webViewLink?: string | null;
+  parents?: string[] | null;
 }

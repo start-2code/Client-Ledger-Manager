@@ -157,6 +157,7 @@ export const GetDriveClientFilesResponse = zod.object({
       size: zod.string().nullish(),
       modifiedTime: zod.string().nullish(),
       webViewLink: zod.string().nullish(),
+      parents: zod.array(zod.string()).nullish(),
     }),
   ),
   clientFolderId: zod.string().nullish(),
@@ -182,8 +183,16 @@ export const SearchDriveClientFilesResponse = zod.object({
       size: zod.string().nullish(),
       modifiedTime: zod.string().nullish(),
       webViewLink: zod.string().nullish(),
+      parents: zod.array(zod.string()).nullish(),
     }),
   ),
+});
+
+/**
+ * @summary Delete a file from Drive
+ */
+export const DeleteDriveFileParams = zod.object({
+  fileId: zod.coerce.string(),
 });
 
 /**

@@ -67,13 +67,24 @@ export async function exchangeCodeForTokens(code: string): Promise<{ refreshToke
   const oauth2 = getOAuth2Client();
   const { tokens } = await oauth2.getToken(code);
   if (!tokens.refresh_token) throw new Error("No refresh token returned — try disconnecting and reconnecting");
-  oauth2.setCredentials(tokens);
-  const oauth2Api = google.oauth2({ version: "v2", auth: oauth2 });
-  const userInfo = await oauth2Api.userinfo.get();
-  return {
-    refreshToken: tokens.refresh_token,
-    email: userInfo.data.email ?? "unknown",
-  };
+
+  // Fetch userinfo directly with the access token to avoid googleapis wrapper auth issues
+  let email = "unknown";
+  if (tokens.access_token) {
+    try {
+      const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      if (res.ok) {
+        const info = await res.json() as { email?: string };
+        email = info.email ?? "unknown";
+      }
+    } catch {
+      // email stays as "unknown" — not fatal
+    }
+  }
+
+  return { refreshToken: tokens.refresh_token, email };
 }
 
 function getDriveClientFromToken(refreshToken: string) {

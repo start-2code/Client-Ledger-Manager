@@ -212,7 +212,8 @@ export async function uploadFileAsUser(
 export async function getRecentFiles(rootFolderId: string, maxResults = 20): Promise<DriveFile[]> {
   const drive = getDriveClient();
   const res = await drive.files.list({
-    q: `'${rootFolderId}' in parents and mimeType!='application/vnd.google-apps.folder' and trashed=false`,
+    // 'in ancestors' searches recursively through all subfolders
+    q: `'${rootFolderId}' in ancestors and mimeType!='application/vnd.google-apps.folder' and trashed=false`,
     fields: "files(id,name,mimeType,size,modifiedTime,webViewLink,parents)",
     orderBy: "modifiedTime desc",
     pageSize: maxResults,

@@ -341,6 +341,7 @@ router.get("/drive/clients/:clientId/files", async (req, res): Promise<void> => 
       })
     );
 
+    res.setHeader("Cache-Control", "no-store");
     res.json({ folders, recentFiles, clientFolderId: client.driveFolderId });
   } catch (err: any) {
     req.log.error({ err }, "Failed to get client drive files");

@@ -70,7 +70,7 @@ export function DriveAdminPanel() {
     setProvisioning(true);
     try {
       const result = await provisionAll.mutateAsync();
-      qc.invalidateQueries({ queryKey: getGetDriveProvisionStatsQueryKey() });
+      await qc.invalidateQueries({ queryKey: getGetDriveProvisionStatsQueryKey() });
       toast.success(`Done — ${result.provisioned} folders created, ${result.failed} failed`);
     } catch (err: any) {
       toast.error(err?.response?.data?.error ?? "Provisioning failed");

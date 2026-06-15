@@ -13,6 +13,7 @@ import {
   useDriveProvisionClient,
   useGetDriveStatus,
   getGetDriveClientFilesQueryKey,
+  getGetDriveProvisionStatsQueryKey,
 } from "@workspace/api-client-react";
 import type { DriveFile, DriveFolder } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -311,7 +312,10 @@ export function DriveDocumentsTab({ clientId, clientName }: Props) {
     setProvisioning(true);
     try {
       await provision.mutateAsync({ clientId });
-      await qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey(clientId) });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: getGetDriveClientFilesQueryKey(clientId) }),
+        qc.invalidateQueries({ queryKey: getGetDriveProvisionStatsQueryKey() }),
+      ]);
       await refetch();
       toast.success("Drive folder created");
     } catch (err: any) {

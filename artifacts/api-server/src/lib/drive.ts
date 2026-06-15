@@ -45,6 +45,8 @@ export async function getOrCreateRootFolder(rootFolderName: string): Promise<str
     q: `name='${rootFolderName.replace(/'/g, "\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: "files(id,name)",
     spaces: "drive",
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
   });
   const existing = search.data.files?.[0];
   if (existing?.id) return existing.id;
@@ -55,6 +57,7 @@ export async function getOrCreateRootFolder(rootFolderName: string): Promise<str
       mimeType: "application/vnd.google-apps.folder",
     },
     fields: "id",
+    supportsAllDrives: true,
   });
   return created.data.id!;
 }
@@ -68,6 +71,7 @@ export async function createFolder(name: string, parentId: string): Promise<stri
       parents: [parentId],
     },
     fields: "id",
+    supportsAllDrives: true,
   });
   return res.data.id!;
 }
@@ -89,6 +93,8 @@ export async function listFilesInFolder(folderId: string): Promise<DriveFile[]> 
     fields: "files(id,name,mimeType,size,modifiedTime,webViewLink,parents)",
     orderBy: "modifiedTime desc",
     pageSize: 50,
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
   });
   return (res.data.files ?? []) as DriveFile[];
 }
@@ -100,6 +106,8 @@ export async function listFoldersInFolder(folderId: string): Promise<DriveFile[]
     fields: "files(id,name,mimeType,webViewLink,parents)",
     orderBy: "name",
     pageSize: 100,
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
   });
   return (res.data.files ?? []) as DriveFile[];
 }
@@ -112,6 +120,8 @@ export async function searchFilesInFolder(rootFolderId: string, query: string): 
     fields: "files(id,name,mimeType,size,modifiedTime,webViewLink,parents)",
     orderBy: "modifiedTime desc",
     pageSize: 30,
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
   });
   return (res.data.files ?? []) as DriveFile[];
 }
@@ -135,6 +145,7 @@ export async function uploadFile(
       body: stream,
     },
     fields: "id,name,mimeType,size,modifiedTime,webViewLink",
+    supportsAllDrives: true,
   });
   return res.data as DriveFile;
 }
@@ -146,7 +157,8 @@ export async function getRecentFiles(rootFolderId: string, maxResults = 20): Pro
     fields: "files(id,name,mimeType,size,modifiedTime,webViewLink,parents)",
     orderBy: "modifiedTime desc",
     pageSize: maxResults,
-    includeItemsFromAllDrives: false,
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
   });
   return (res.data.files ?? []) as DriveFile[];
 }

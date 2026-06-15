@@ -333,7 +333,14 @@ router.post("/drive/clients/:clientId/upload/:folderId", upload.single("file"), 
     res.status(201).json({ file: uploaded });
   } catch (err: any) {
     req.log.error({ err }, "Failed to upload file to drive");
-    res.status(500).json({ error: err?.message ?? "Internal server error" });
+    const msg: string = err?.message ?? "";
+    if (msg.includes("storage quota") || msg.includes("storageQuotaExceeded")) {
+      res.status(403).json({
+        error: "Upload failed: the root folder must be inside a Google Shared Drive. Service accounts cannot store files in a personal My Drive. Create a Shared Drive, add the service account as a member, move the root folder there, then re-save settings.",
+      });
+      return;
+    }
+    res.status(500).json({ error: msg || "Internal server error" });
   }
 });
 

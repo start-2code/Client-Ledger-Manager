@@ -168,11 +168,13 @@ export async function listFoldersInFolder(folderId: string): Promise<DriveFile[]
   return (res.data.files ?? []) as DriveFile[];
 }
 
-export async function searchFilesInFolder(rootFolderId: string, query: string): Promise<DriveFile[]> {
+export async function searchFilesInFolder(folderIds: string[], query: string): Promise<DriveFile[]> {
+  if (folderIds.length === 0) return [];
   const drive = getDriveClient();
   const escaped = query.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  const parentsClauses = folderIds.map(id => `'${id}' in parents`).join(" or ");
   const res = await drive.files.list({
-    q: `'${rootFolderId}' in parents and fullText contains '${escaped}' and trashed=false`,
+    q: `(${parentsClauses}) and mimeType!='application/vnd.google-apps.folder' and fullText contains '${escaped}' and trashed=false`,
     fields: "files(id,name,mimeType,size,modifiedTime,webViewLink,parents)",
     orderBy: "modifiedTime desc",
     pageSize: 30,

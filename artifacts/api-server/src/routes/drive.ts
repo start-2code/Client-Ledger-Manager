@@ -397,7 +397,12 @@ router.get("/drive/clients/:clientId/search", async (req, res): Promise<void> =>
     const [client] = await db.select({ driveFolderId: clientsTable.driveFolderId }).from(clientsTable).where(eq(clientsTable.id, clientId));
     if (!client?.driveFolderId) { res.json({ files: [] }); return; }
 
-    const files = await searchFilesInFolder(client.driveFolderId, q);
+    // Collect all folder IDs in the client's tree so search covers every subfolder
+    const template = await getTemplateTree();
+    const folders = await ensureAndListFolders(client.driveFolderId, template);
+    const allFolderIds = [client.driveFolderId, ...collectFolderIds(folders)];
+
+    const files = await searchFilesInFolder(allFolderIds, q);
     res.json({ files });
   } catch (err: any) {
     req.log.error({ err }, "Failed to search client drive files");

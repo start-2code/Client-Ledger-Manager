@@ -26,9 +26,20 @@ import type {
   ClientList,
   ClientUpdate,
   CompaniesHouseResponse,
+  CreateDriveFolderTemplateNodeBody,
   CtReturnList,
   DashboardSummary,
   DashboardTimeline,
+  DriveClientFilesResponse,
+  DriveFolderTemplateNode,
+  DriveFolderTemplateResponse,
+  DriveProvisionAllResponse,
+  DriveProvisionResponse,
+  DriveProvisionStatsResponse,
+  DriveSearchResponse,
+  DriveSettingsBody,
+  DriveStatusResponse,
+  DriveUploadResponse,
   DropdownOption,
   DropdownOptionInput,
   DropdownOptionList,
@@ -53,6 +64,7 @@ import type {
   ListTaxReturnsParams,
   MtdItsaResponse,
   SaReturnList,
+  SearchDriveClientFilesParams,
   Task,
   TaskInput,
   TaskList,
@@ -62,6 +74,8 @@ import type {
   TaxReturn,
   TaxReturnList,
   TaxReturnUpdate,
+  UpdateDriveFolderTemplateNodeBody,
+  UploadDriveFileBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -72,6 +86,1064 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Get Drive connection status and settings
+ */
+export const getGetDriveStatusUrl = () => {
+  return `/api/drive/status`;
+};
+
+export const getDriveStatus = async (
+  options?: RequestInit,
+): Promise<DriveStatusResponse> => {
+  return customFetch<DriveStatusResponse>(getGetDriveStatusUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDriveStatusQueryKey = () => {
+  return [`/api/drive/status`] as const;
+};
+
+export const getGetDriveStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDriveStatus>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveStatus>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDriveStatusQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDriveStatus>>> = ({
+    signal,
+  }) => getDriveStatus({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveStatus>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDriveStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDriveStatus>>
+>;
+export type GetDriveStatusQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get Drive connection status and settings
+ */
+
+export function useGetDriveStatus<
+  TData = Awaited<ReturnType<typeof getDriveStatus>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveStatus>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDriveStatusQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update Drive settings
+ */
+export const getUpdateDriveSettingsUrl = () => {
+  return `/api/drive/settings`;
+};
+
+export const updateDriveSettings = async (
+  driveSettingsBody: DriveSettingsBody,
+  options?: RequestInit,
+): Promise<DriveStatusResponse> => {
+  return customFetch<DriveStatusResponse>(getUpdateDriveSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(driveSettingsBody),
+  });
+};
+
+export const getUpdateDriveSettingsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDriveSettings>>,
+    TError,
+    { data: BodyType<DriveSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDriveSettings>>,
+  TError,
+  { data: BodyType<DriveSettingsBody> },
+  TContext
+> => {
+  const mutationKey = ["updateDriveSettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDriveSettings>>,
+    { data: BodyType<DriveSettingsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateDriveSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDriveSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDriveSettings>>
+>;
+export type UpdateDriveSettingsMutationBody = BodyType<DriveSettingsBody>;
+export type UpdateDriveSettingsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update Drive settings
+ */
+export const useUpdateDriveSettings = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDriveSettings>>,
+    TError,
+    { data: BodyType<DriveSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDriveSettings>>,
+  TError,
+  { data: BodyType<DriveSettingsBody> },
+  TContext
+> => {
+  return useMutation(getUpdateDriveSettingsMutationOptions(options));
+};
+
+/**
+ * @summary Get folder template tree
+ */
+export const getGetDriveFolderTemplateUrl = () => {
+  return `/api/drive/template`;
+};
+
+export const getDriveFolderTemplate = async (
+  options?: RequestInit,
+): Promise<DriveFolderTemplateResponse> => {
+  return customFetch<DriveFolderTemplateResponse>(
+    getGetDriveFolderTemplateUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetDriveFolderTemplateQueryKey = () => {
+  return [`/api/drive/template`] as const;
+};
+
+export const getGetDriveFolderTemplateQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDriveFolderTemplate>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveFolderTemplate>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetDriveFolderTemplateQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDriveFolderTemplate>>
+  > = ({ signal }) => getDriveFolderTemplate({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveFolderTemplate>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDriveFolderTemplateQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDriveFolderTemplate>>
+>;
+export type GetDriveFolderTemplateQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get folder template tree
+ */
+
+export function useGetDriveFolderTemplate<
+  TData = Awaited<ReturnType<typeof getDriveFolderTemplate>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveFolderTemplate>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDriveFolderTemplateQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a folder template node
+ */
+export const getCreateDriveFolderTemplateNodeUrl = () => {
+  return `/api/drive/template`;
+};
+
+export const createDriveFolderTemplateNode = async (
+  createDriveFolderTemplateNodeBody: CreateDriveFolderTemplateNodeBody,
+  options?: RequestInit,
+): Promise<DriveFolderTemplateNode> => {
+  return customFetch<DriveFolderTemplateNode>(
+    getCreateDriveFolderTemplateNodeUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(createDriveFolderTemplateNodeBody),
+    },
+  );
+};
+
+export const getCreateDriveFolderTemplateNodeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDriveFolderTemplateNode>>,
+    TError,
+    { data: BodyType<CreateDriveFolderTemplateNodeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createDriveFolderTemplateNode>>,
+  TError,
+  { data: BodyType<CreateDriveFolderTemplateNodeBody> },
+  TContext
+> => {
+  const mutationKey = ["createDriveFolderTemplateNode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createDriveFolderTemplateNode>>,
+    { data: BodyType<CreateDriveFolderTemplateNodeBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createDriveFolderTemplateNode(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateDriveFolderTemplateNodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createDriveFolderTemplateNode>>
+>;
+export type CreateDriveFolderTemplateNodeMutationBody =
+  BodyType<CreateDriveFolderTemplateNodeBody>;
+export type CreateDriveFolderTemplateNodeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a folder template node
+ */
+export const useCreateDriveFolderTemplateNode = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createDriveFolderTemplateNode>>,
+    TError,
+    { data: BodyType<CreateDriveFolderTemplateNodeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createDriveFolderTemplateNode>>,
+  TError,
+  { data: BodyType<CreateDriveFolderTemplateNodeBody> },
+  TContext
+> => {
+  return useMutation(getCreateDriveFolderTemplateNodeMutationOptions(options));
+};
+
+/**
+ * @summary Update a folder template node
+ */
+export const getUpdateDriveFolderTemplateNodeUrl = (id: number) => {
+  return `/api/drive/template/${id}`;
+};
+
+export const updateDriveFolderTemplateNode = async (
+  id: number,
+  updateDriveFolderTemplateNodeBody: UpdateDriveFolderTemplateNodeBody,
+  options?: RequestInit,
+): Promise<DriveFolderTemplateNode> => {
+  return customFetch<DriveFolderTemplateNode>(
+    getUpdateDriveFolderTemplateNodeUrl(id),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(updateDriveFolderTemplateNodeBody),
+    },
+  );
+};
+
+export const getUpdateDriveFolderTemplateNodeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDriveFolderTemplateNode>>,
+    TError,
+    { id: number; data: BodyType<UpdateDriveFolderTemplateNodeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDriveFolderTemplateNode>>,
+  TError,
+  { id: number; data: BodyType<UpdateDriveFolderTemplateNodeBody> },
+  TContext
+> => {
+  const mutationKey = ["updateDriveFolderTemplateNode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDriveFolderTemplateNode>>,
+    { id: number; data: BodyType<UpdateDriveFolderTemplateNodeBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateDriveFolderTemplateNode(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDriveFolderTemplateNodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDriveFolderTemplateNode>>
+>;
+export type UpdateDriveFolderTemplateNodeMutationBody =
+  BodyType<UpdateDriveFolderTemplateNodeBody>;
+export type UpdateDriveFolderTemplateNodeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a folder template node
+ */
+export const useUpdateDriveFolderTemplateNode = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDriveFolderTemplateNode>>,
+    TError,
+    { id: number; data: BodyType<UpdateDriveFolderTemplateNodeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDriveFolderTemplateNode>>,
+  TError,
+  { id: number; data: BodyType<UpdateDriveFolderTemplateNodeBody> },
+  TContext
+> => {
+  return useMutation(getUpdateDriveFolderTemplateNodeMutationOptions(options));
+};
+
+/**
+ * @summary Delete a folder template node and all its descendants
+ */
+export const getDeleteDriveFolderTemplateNodeUrl = (id: number) => {
+  return `/api/drive/template/${id}`;
+};
+
+export const deleteDriveFolderTemplateNode = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteDriveFolderTemplateNodeUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDriveFolderTemplateNodeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDriveFolderTemplateNode>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDriveFolderTemplateNode>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteDriveFolderTemplateNode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDriveFolderTemplateNode>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteDriveFolderTemplateNode(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDriveFolderTemplateNodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDriveFolderTemplateNode>>
+>;
+
+export type DeleteDriveFolderTemplateNodeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a folder template node and all its descendants
+ */
+export const useDeleteDriveFolderTemplateNode = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDriveFolderTemplateNode>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDriveFolderTemplateNode>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteDriveFolderTemplateNodeMutationOptions(options));
+};
+
+/**
+ * @summary Get provisioning stats
+ */
+export const getGetDriveProvisionStatsUrl = () => {
+  return `/api/drive/provision-stats`;
+};
+
+export const getDriveProvisionStats = async (
+  options?: RequestInit,
+): Promise<DriveProvisionStatsResponse> => {
+  return customFetch<DriveProvisionStatsResponse>(
+    getGetDriveProvisionStatsUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetDriveProvisionStatsQueryKey = () => {
+  return [`/api/drive/provision-stats`] as const;
+};
+
+export const getGetDriveProvisionStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDriveProvisionStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveProvisionStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetDriveProvisionStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDriveProvisionStats>>
+  > = ({ signal }) => getDriveProvisionStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveProvisionStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDriveProvisionStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDriveProvisionStats>>
+>;
+export type GetDriveProvisionStatsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get provisioning stats
+ */
+
+export function useGetDriveProvisionStats<
+  TData = Awaited<ReturnType<typeof getDriveProvisionStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveProvisionStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDriveProvisionStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Provision Drive folders for all un-provisioned clients
+ */
+export const getDriveProvisionAllUrl = () => {
+  return `/api/drive/provision-all`;
+};
+
+export const driveProvisionAll = async (
+  options?: RequestInit,
+): Promise<DriveProvisionAllResponse> => {
+  return customFetch<DriveProvisionAllResponse>(getDriveProvisionAllUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getDriveProvisionAllMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof driveProvisionAll>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof driveProvisionAll>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["driveProvisionAll"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof driveProvisionAll>>,
+    void
+  > = () => {
+    return driveProvisionAll(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DriveProvisionAllMutationResult = NonNullable<
+  Awaited<ReturnType<typeof driveProvisionAll>>
+>;
+
+export type DriveProvisionAllMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Provision Drive folders for all un-provisioned clients
+ */
+export const useDriveProvisionAll = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof driveProvisionAll>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof driveProvisionAll>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getDriveProvisionAllMutationOptions(options));
+};
+
+/**
+ * @summary Provision Drive folder for a single client
+ */
+export const getDriveProvisionClientUrl = (clientId: number) => {
+  return `/api/drive/clients/${clientId}/provision`;
+};
+
+export const driveProvisionClient = async (
+  clientId: number,
+  options?: RequestInit,
+): Promise<DriveProvisionResponse> => {
+  return customFetch<DriveProvisionResponse>(
+    getDriveProvisionClientUrl(clientId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getDriveProvisionClientMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof driveProvisionClient>>,
+    TError,
+    { clientId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof driveProvisionClient>>,
+  TError,
+  { clientId: number },
+  TContext
+> => {
+  const mutationKey = ["driveProvisionClient"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof driveProvisionClient>>,
+    { clientId: number }
+  > = (props) => {
+    const { clientId } = props ?? {};
+
+    return driveProvisionClient(clientId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DriveProvisionClientMutationResult = NonNullable<
+  Awaited<ReturnType<typeof driveProvisionClient>>
+>;
+
+export type DriveProvisionClientMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Provision Drive folder for a single client
+ */
+export const useDriveProvisionClient = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof driveProvisionClient>>,
+    TError,
+    { clientId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof driveProvisionClient>>,
+  TError,
+  { clientId: number },
+  TContext
+> => {
+  return useMutation(getDriveProvisionClientMutationOptions(options));
+};
+
+/**
+ * @summary Get client Drive folders and recent files
+ */
+export const getGetDriveClientFilesUrl = (clientId: number) => {
+  return `/api/drive/clients/${clientId}/files`;
+};
+
+export const getDriveClientFiles = async (
+  clientId: number,
+  options?: RequestInit,
+): Promise<DriveClientFilesResponse> => {
+  return customFetch<DriveClientFilesResponse>(
+    getGetDriveClientFilesUrl(clientId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetDriveClientFilesQueryKey = (clientId: number) => {
+  return [`/api/drive/clients/${clientId}/files`] as const;
+};
+
+export const getGetDriveClientFilesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDriveClientFiles>>,
+  TError = ErrorType<unknown>,
+>(
+  clientId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDriveClientFiles>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetDriveClientFilesQueryKey(clientId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDriveClientFiles>>
+  > = ({ signal }) =>
+    getDriveClientFiles(clientId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!clientId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDriveClientFiles>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDriveClientFilesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDriveClientFiles>>
+>;
+export type GetDriveClientFilesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get client Drive folders and recent files
+ */
+
+export function useGetDriveClientFiles<
+  TData = Awaited<ReturnType<typeof getDriveClientFiles>>,
+  TError = ErrorType<unknown>,
+>(
+  clientId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDriveClientFiles>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDriveClientFilesQueryOptions(clientId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Search files within a client's Drive folder
+ */
+export const getSearchDriveClientFilesUrl = (
+  clientId: number,
+  params: SearchDriveClientFilesParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/drive/clients/${clientId}/search?${stringifiedParams}`
+    : `/api/drive/clients/${clientId}/search`;
+};
+
+export const searchDriveClientFiles = async (
+  clientId: number,
+  params: SearchDriveClientFilesParams,
+  options?: RequestInit,
+): Promise<DriveSearchResponse> => {
+  return customFetch<DriveSearchResponse>(
+    getSearchDriveClientFilesUrl(clientId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getSearchDriveClientFilesQueryKey = (
+  clientId: number,
+  params?: SearchDriveClientFilesParams,
+) => {
+  return [
+    `/api/drive/clients/${clientId}/search`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getSearchDriveClientFilesQueryOptions = <
+  TData = Awaited<ReturnType<typeof searchDriveClientFiles>>,
+  TError = ErrorType<unknown>,
+>(
+  clientId: number,
+  params: SearchDriveClientFilesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchDriveClientFiles>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getSearchDriveClientFilesQueryKey(clientId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof searchDriveClientFiles>>
+  > = ({ signal }) =>
+    searchDriveClientFiles(clientId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!clientId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof searchDriveClientFiles>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type SearchDriveClientFilesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof searchDriveClientFiles>>
+>;
+export type SearchDriveClientFilesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Search files within a client's Drive folder
+ */
+
+export function useSearchDriveClientFiles<
+  TData = Awaited<ReturnType<typeof searchDriveClientFiles>>,
+  TError = ErrorType<unknown>,
+>(
+  clientId: number,
+  params: SearchDriveClientFilesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof searchDriveClientFiles>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getSearchDriveClientFilesQueryOptions(
+    clientId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Upload a file to a client subfolder
+ */
+export const getUploadDriveFileUrl = (clientId: number, folderId: string) => {
+  return `/api/drive/clients/${clientId}/upload/${folderId}`;
+};
+
+export const uploadDriveFile = async (
+  clientId: number,
+  folderId: string,
+  uploadDriveFileBody: UploadDriveFileBody,
+  options?: RequestInit,
+): Promise<DriveUploadResponse> => {
+  const formData = new FormData();
+  formData.append(`file`, uploadDriveFileBody.file);
+
+  return customFetch<DriveUploadResponse>(
+    getUploadDriveFileUrl(clientId, folderId),
+    {
+      ...options,
+      method: "POST",
+      body: formData,
+    },
+  );
+};
+
+export const getUploadDriveFileMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadDriveFile>>,
+    TError,
+    { clientId: number; folderId: string; data: BodyType<UploadDriveFileBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof uploadDriveFile>>,
+  TError,
+  { clientId: number; folderId: string; data: BodyType<UploadDriveFileBody> },
+  TContext
+> => {
+  const mutationKey = ["uploadDriveFile"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof uploadDriveFile>>,
+    { clientId: number; folderId: string; data: BodyType<UploadDriveFileBody> }
+  > = (props) => {
+    const { clientId, folderId, data } = props ?? {};
+
+    return uploadDriveFile(clientId, folderId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UploadDriveFileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof uploadDriveFile>>
+>;
+export type UploadDriveFileMutationBody = BodyType<UploadDriveFileBody>;
+export type UploadDriveFileMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Upload a file to a client subfolder
+ */
+export const useUploadDriveFile = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadDriveFile>>,
+    TError,
+    { clientId: number; folderId: string; data: BodyType<UploadDriveFileBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof uploadDriveFile>>,
+  TError,
+  { clientId: number; folderId: string; data: BodyType<UploadDriveFileBody> },
+  TContext
+> => {
+  return useMutation(getUploadDriveFileMutationOptions(options));
+};
 
 /**
  * @summary Chat with AI assistant about practice data

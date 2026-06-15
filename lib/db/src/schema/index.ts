@@ -11,3 +11,5 @@ export * from "./companies-house";
 export * from "./mtd-itsa";
 export * from "./import-batches";
 export * from "./dropdown-options";
+export * from "./drive-settings";
+export * from "./drive-folder-template";

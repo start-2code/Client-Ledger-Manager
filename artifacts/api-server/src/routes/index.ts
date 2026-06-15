@@ -15,6 +15,7 @@ import dashboardRouter from "./dashboard";
 import adminRouter from "./admin";
 import aiRouter from "./ai";
 import importRouter from "./import";
+import driveRouter from "./drive";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use("/dashboard", dashboardRouter);
 router.use("/admin", adminRouter);
 router.use("/admin/import", importRouter);
 router.use("/ai", aiRouter);
+router.use(driveRouter);
 
 export default router;

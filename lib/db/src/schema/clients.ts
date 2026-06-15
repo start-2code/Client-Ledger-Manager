@@ -63,6 +63,8 @@ export const clientsTable = pgTable("clients", {
   dateOfConsent: date("date_of_consent"),
   dateOfLatestEngagement: date("date_of_latest_engagement"),
   dateOfClientLoss: date("date_of_client_loss"),
+  // Google Drive
+  driveFolderId: text("drive_folder_id"),
   // Practice flags
   smartvaultFlag: text("smartvault_flag"),
   engagerFlag: text("engager_flag"),

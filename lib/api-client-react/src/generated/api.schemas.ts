@@ -685,6 +685,109 @@ export interface ImportHistoryResponse {
   batches: ImportBatch[];
 }
 
+export interface DriveStatusResponse {
+  connected: boolean;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  error?: string | null;
+  rootFolderName?: string;
+  /** @nullable */
+  rootFolderId?: string | null;
+}
+
+export interface DriveSettingsBody {
+  rootFolderName?: string;
+}
+
+export interface DriveFolderTemplateNode {
+  id: number;
+  /** @nullable */
+  parentId?: number | null;
+  name: string;
+  sortOrder: number;
+  children?: DriveFolderTemplateNode[];
+}
+
+export interface DriveFolderTemplateResponse {
+  nodes: DriveFolderTemplateNode[];
+}
+
+export interface CreateDriveFolderTemplateNodeBody {
+  name: string;
+  /** @nullable */
+  parentId?: number | null;
+  sortOrder?: number;
+}
+
+export interface UpdateDriveFolderTemplateNodeBody {
+  name?: string;
+  sortOrder?: number;
+  /** @nullable */
+  parentId?: number | null;
+}
+
+export interface DriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  /** @nullable */
+  size?: string | null;
+  /** @nullable */
+  modifiedTime?: string | null;
+  /** @nullable */
+  webViewLink?: string | null;
+}
+
+export interface DriveFolder {
+  /** @nullable */
+  id: string | null;
+  name: string;
+  /** @nullable */
+  webViewLink?: string | null;
+  children?: DriveFolder[];
+}
+
+export interface DriveClientFilesResponse {
+  folders: DriveFolder[];
+  recentFiles: DriveFile[];
+  /** @nullable */
+  clientFolderId?: string | null;
+}
+
+export interface DriveSearchResponse {
+  files: DriveFile[];
+}
+
+export interface DriveProvisionResponse {
+  folderId: string;
+  clientId: number;
+}
+
+export interface DriveProvisionAllResponse {
+  provisioned: number;
+  skipped: number;
+  failed: number;
+}
+
+export interface DriveProvisionStatsResponse {
+  total: number;
+  provisioned: number;
+  unprovisioned: number;
+}
+
+export interface DriveUploadResponse {
+  file: DriveFile;
+}
+
+export type SearchDriveClientFilesParams = {
+  q: string;
+};
+
+export type UploadDriveFileBody = {
+  file: Blob;
+};
+
 export type ListClientsParams = {
   search?: string;
   type?: string;

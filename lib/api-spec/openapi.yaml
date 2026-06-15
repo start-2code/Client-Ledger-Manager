@@ -25,7 +25,232 @@ tags:
     description: Admin operations for dropdown option management
   - name: ai
     description: AI assistant powered by Gemini
+  - name: drive
+    description: Google Drive document management
 paths:
+  /drive/status:
+    get:
+      operationId: getDriveStatus
+      tags: [drive]
+      summary: Get Drive connection status and settings
+      responses:
+        "200":
+          description: Drive status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveStatusResponse"
+
+  /drive/settings:
+    put:
+      operationId: updateDriveSettings
+      tags: [drive]
+      summary: Update Drive settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriveSettingsBody"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveStatusResponse"
+
+  /drive/template:
+    get:
+      operationId: getDriveFolderTemplate
+      tags: [drive]
+      summary: Get folder template tree
+      responses:
+        "200":
+          description: Folder template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveFolderTemplateResponse"
+    post:
+      operationId: createDriveFolderTemplateNode
+      tags: [drive]
+      summary: Create a folder template node
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDriveFolderTemplateNodeBody"
+      responses:
+        "201":
+          description: Created node
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveFolderTemplateNode"
+
+  /drive/template/{id}:
+    put:
+      operationId: updateDriveFolderTemplateNode
+      tags: [drive]
+      summary: Update a folder template node
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDriveFolderTemplateNodeBody"
+      responses:
+        "200":
+          description: Updated node
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveFolderTemplateNode"
+    delete:
+      operationId: deleteDriveFolderTemplateNode
+      tags: [drive]
+      summary: Delete a folder template node and all its descendants
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /drive/provision-stats:
+    get:
+      operationId: getDriveProvisionStats
+      tags: [drive]
+      summary: Get provisioning stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveProvisionStatsResponse"
+
+  /drive/provision-all:
+    post:
+      operationId: driveProvisionAll
+      tags: [drive]
+      summary: Provision Drive folders for all un-provisioned clients
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveProvisionAllResponse"
+
+  /drive/clients/{clientId}/provision:
+    post:
+      operationId: driveProvisionClient
+      tags: [drive]
+      summary: Provision Drive folder for a single client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveProvisionResponse"
+
+  /drive/clients/{clientId}/files:
+    get:
+      operationId: getDriveClientFiles
+      tags: [drive]
+      summary: Get client Drive folders and recent files
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Folders and recent files
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveClientFilesResponse"
+
+  /drive/clients/{clientId}/search:
+    get:
+      operationId: searchDriveClientFiles
+      tags: [drive]
+      summary: Search files within a client's Drive folder
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveSearchResponse"
+
+  /drive/clients/{clientId}/upload/{folderId}:
+    post:
+      operationId: uploadDriveFile
+      tags: [drive]
+      summary: Upload a file to a client subfolder
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Uploaded file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriveUploadResponse"
+
   /ai/chat:
     post:
       operationId: aiChat
@@ -1799,3 +2024,165 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ImportBatch"
+
+    DriveStatusResponse:
+      type: object
+      required: [connected]
+      properties:
+        connected:
+          type: boolean
+        email:
+          type: ["string", "null"]
+        error:
+          type: ["string", "null"]
+        rootFolderName:
+          type: string
+        rootFolderId:
+          type: ["string", "null"]
+
+    DriveSettingsBody:
+      type: object
+      properties:
+        rootFolderName:
+          type: string
+
+    DriveFolderTemplateNode:
+      type: object
+      required: [id, name, sortOrder]
+      properties:
+        id:
+          type: integer
+        parentId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        sortOrder:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriveFolderTemplateNode"
+
+    DriveFolderTemplateResponse:
+      type: object
+      required: [nodes]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriveFolderTemplateNode"
+
+    CreateDriveFolderTemplateNodeBody:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        parentId:
+          type: ["integer", "null"]
+        sortOrder:
+          type: integer
+
+    UpdateDriveFolderTemplateNodeBody:
+      type: object
+      properties:
+        name:
+          type: string
+        sortOrder:
+          type: integer
+        parentId:
+          type: ["integer", "null"]
+
+    DriveFile:
+      type: object
+      required: [id, name, mimeType]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        mimeType:
+          type: string
+        size:
+          type: ["string", "null"]
+        modifiedTime:
+          type: ["string", "null"]
+        webViewLink:
+          type: ["string", "null"]
+
+    DriveFolder:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: ["string", "null"]
+        name:
+          type: string
+        webViewLink:
+          type: ["string", "null"]
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriveFolder"
+
+    DriveClientFilesResponse:
+      type: object
+      required: [folders, recentFiles]
+      properties:
+        folders:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriveFolder"
+        recentFiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriveFile"
+        clientFolderId:
+          type: ["string", "null"]
+
+    DriveSearchResponse:
+      type: object
+      required: [files]
+      properties:
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/DriveFile"
+
+    DriveProvisionResponse:
+      type: object
+      required: [folderId, clientId]
+      properties:
+        folderId:
+          type: string
+        clientId:
+          type: integer
+
+    DriveProvisionAllResponse:
+      type: object
+      required: [provisioned, skipped, failed]
+      properties:
+        provisioned:
+          type: integer
+        skipped:
+          type: integer
+        failed:
+          type: integer
+
+    DriveProvisionStatsResponse:
+      type: object
+      required: [total, provisioned, unprovisioned]
+      properties:
+        total:
+          type: integer
+        provisioned:
+          type: integer
+        unprovisioned:
+          type: integer
+
+    DriveUploadResponse:
+      type: object
+      required: [file]
+      properties:
+        file:
+          $ref: "#/components/schemas/DriveFile"

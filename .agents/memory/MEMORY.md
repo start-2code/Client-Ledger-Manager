@@ -1,1 +1,3 @@
 - [Nanotax HTML-as-Excel parsing](nanotax-html-excel.md) — Nanotax ZIP DB files are HTML tables with .xlsx extension; self-closing <td/> causes SheetJS column shift.
+- [Codegen duplicate export fix](codegen-dedup.md) — orval split mode creates type/Zod conflicts; post-process in api-spec/package.json dynamically deduplicates types/index.ts by comparing against api.ts exports.
+- [Google Drive integration](google-drive.md) — Service account auth via GOOGLE_SERVICE_ACCOUNT_KEY; route at api-server/src/routes/drive.ts; service lib at src/lib/drive.ts; template in drive_folder_template table; driveFolderId on clients.

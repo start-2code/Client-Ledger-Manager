@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Check, X, Plus, Settings2, Upload, History, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Check, X, Plus, Settings2, Upload, History, AlertCircle, CheckCircle2, Loader2, HardDrive } from "lucide-react";
 import { toast } from "sonner";
 import {
   useListDropdownOptions,
@@ -17,6 +17,7 @@ import {
   useImportHistory,
   getImportHistoryQueryKey,
 } from "@workspace/api-client-react";
+import { DriveAdminPanel } from "@/components/drive-admin-panel";
 
 import { useQueryClient } from "@tanstack/react-query";
 import type { ImportPreview, ImportBatch } from "@workspace/api-client-react";
@@ -471,6 +472,10 @@ export default function Admin() {
             <Upload className="h-3.5 w-3.5 mr-1.5" />
             TaxCalc Import
           </TabsTrigger>
+          <TabsTrigger value="drive">
+            <HardDrive className="h-3.5 w-3.5 mr-1.5" />
+            Drive Folders
+          </TabsTrigger>
           {CATEGORIES.map((cat) => (
             <TabsTrigger key={cat.key} value={cat.key}>
               {cat.label}
@@ -480,6 +485,10 @@ export default function Admin() {
 
         <TabsContent value="import">
           <ImportPanel />
+        </TabsContent>
+
+        <TabsContent value="drive">
+          <DriveAdminPanel />
         </TabsContent>
 
         {CATEGORIES.map((cat) => (

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "codegen": "orval --config ./orval.config.ts && node -e \"const fs=require('fs'),f='../api-zod/src/generated/types/index.ts',c=fs.readFileSync(f,'utf8');fs.writeFileSync(f,c.split('\\n').filter(l=>!/(importPreviewBody|importRunBody|importHistoryResponse)/.test(l)).join('\\n'));\" && pnpm -w run typecheck:libs"
+    "codegen": "orval --config ./orval.config.ts && node -e \"const fs=require('fs'),path=require('path'),root=path.resolve('..'),apiTs=fs.readFileSync(path.join(root,'api-zod/src/generated/api.ts'),'utf8'),apiExports=new Set(),matchAll=(s,re)=>{let m;while((m=re.exec(s)))apiExports.add(m[1]);},reEach=re=>{re.lastIndex=0;matchAll(apiTs,re);};reEach(/^export const (\\w+)/gm);reEach(/^export type (\\w+)/gm);const f=path.join(root,'api-zod/src/generated/types/index.ts'),c=fs.readFileSync(f,'utf8'),filtered=c.split('\\n').filter(l=>{const m=l.match(/export \\* from \\\"\\.\\/(.+)\\\"/);if(!m)return true;const n=m[1].charAt(0).toUpperCase()+m[1].slice(1);return!apiExports.has(n);}).join('\\n');fs.writeFileSync(f,filtered);\" && pnpm -w run typecheck:libs"
   },
   "devDependencies": {
     "orval": "^8.5.2"

@@ -34,7 +34,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   MapPin, Phone, Mail, CheckCircle2, Clock, Building2, User, Users, Briefcase,
-  MoreHorizontal, Pencil, Trash2, Plus, FileText, PoundSterling, Receipt,
+  MoreHorizontal, Pencil, Trash2, Plus, FileText, PoundSterling, Receipt, HardDrive,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ClientFormDialog } from "@/components/client-form-dialog";
@@ -42,6 +42,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { TaskFormDialog } from "@/components/task-form-dialog";
 import { FinancialInfoEditDialog } from "@/components/financial-info-edit-dialog";
 import { TaxReferenceEditDialog } from "@/components/tax-reference-edit-dialog";
+import { DriveDocumentsTab } from "@/components/drive-documents-tab";
 import { toast } from "sonner";
 
 function fmt(v: string | number | null | undefined): string {
@@ -252,6 +253,10 @@ export default function ClientDetail() {
           <TabsTrigger value="accounts" className="text-xs sm:text-sm">Accounts</TabsTrigger>
           <TabsTrigger value="fees" className="text-xs sm:text-sm">Fees</TabsTrigger>
           <TabsTrigger value="tasks" className="text-xs sm:text-sm">Tasks ({tasks?.length || 0})</TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs sm:text-sm">
+            <HardDrive className="h-3 w-3 mr-1" />
+            Documents
+          </TabsTrigger>
         </TabsList>
 
         {/* Contact Tab */}
@@ -652,6 +657,24 @@ export default function ClientDetail() {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Documents Tab */}
+        <TabsContent value="documents" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HardDrive className="h-4 w-4" />
+                Drive Documents
+              </CardTitle>
+              <CardDescription>
+                Files stored in Google Drive for {client.name}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DriveDocumentsTab clientId={id} clientName={client.name} />
             </CardContent>
           </Card>
         </TabsContent>

@@ -8,6 +8,179 @@
 import * as zod from "zod";
 
 /**
+ * @summary Get Drive connection status and settings
+ */
+export const GetDriveStatusResponse = zod.object({
+  connected: zod.boolean(),
+  email: zod.string().nullish(),
+  error: zod.string().nullish(),
+  rootFolderName: zod.string().optional(),
+  rootFolderId: zod.string().nullish(),
+});
+
+/**
+ * @summary Update Drive settings
+ */
+export const UpdateDriveSettingsBody = zod.object({
+  rootFolderName: zod.string().optional(),
+});
+
+export const UpdateDriveSettingsResponse = zod.object({
+  connected: zod.boolean(),
+  email: zod.string().nullish(),
+  error: zod.string().nullish(),
+  rootFolderName: zod.string().optional(),
+  rootFolderId: zod.string().nullish(),
+});
+
+/**
+ * @summary Get folder template tree
+ */
+export const GetDriveFolderTemplateResponse = zod.object({
+  nodes: zod.array(
+    zod.object({
+      id: zod.number(),
+      parentId: zod.number().nullish(),
+      name: zod.string(),
+      sortOrder: zod.number(),
+      children: zod.array(zod.unknown()).optional(),
+    }),
+  ),
+});
+
+/**
+ * @summary Create a folder template node
+ */
+export const CreateDriveFolderTemplateNodeBody = zod.object({
+  name: zod.string(),
+  parentId: zod.number().nullish(),
+  sortOrder: zod.number().optional(),
+});
+
+/**
+ * @summary Update a folder template node
+ */
+export const UpdateDriveFolderTemplateNodeParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateDriveFolderTemplateNodeBody = zod.object({
+  name: zod.string().optional(),
+  sortOrder: zod.number().optional(),
+  parentId: zod.number().nullish(),
+});
+
+export const UpdateDriveFolderTemplateNodeResponse = zod.object({
+  id: zod.number(),
+  parentId: zod.number().nullish(),
+  name: zod.string(),
+  sortOrder: zod.number(),
+  children: zod.array(zod.unknown()).optional(),
+});
+
+/**
+ * @summary Delete a folder template node and all its descendants
+ */
+export const DeleteDriveFolderTemplateNodeParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Get provisioning stats
+ */
+export const GetDriveProvisionStatsResponse = zod.object({
+  total: zod.number(),
+  provisioned: zod.number(),
+  unprovisioned: zod.number(),
+});
+
+/**
+ * @summary Provision Drive folders for all un-provisioned clients
+ */
+export const DriveProvisionAllResponse = zod.object({
+  provisioned: zod.number(),
+  skipped: zod.number(),
+  failed: zod.number(),
+});
+
+/**
+ * @summary Provision Drive folder for a single client
+ */
+export const DriveProvisionClientParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const DriveProvisionClientResponse = zod.object({
+  folderId: zod.string(),
+  clientId: zod.number(),
+});
+
+/**
+ * @summary Get client Drive folders and recent files
+ */
+export const GetDriveClientFilesParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const GetDriveClientFilesResponse = zod.object({
+  folders: zod.array(
+    zod.object({
+      id: zod.string().nullable(),
+      name: zod.string(),
+      webViewLink: zod.string().nullish(),
+      children: zod.array(zod.unknown()).optional(),
+    }),
+  ),
+  recentFiles: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      mimeType: zod.string(),
+      size: zod.string().nullish(),
+      modifiedTime: zod.string().nullish(),
+      webViewLink: zod.string().nullish(),
+    }),
+  ),
+  clientFolderId: zod.string().nullish(),
+});
+
+/**
+ * @summary Search files within a client's Drive folder
+ */
+export const SearchDriveClientFilesParams = zod.object({
+  clientId: zod.coerce.number(),
+});
+
+export const SearchDriveClientFilesQueryParams = zod.object({
+  q: zod.coerce.string(),
+});
+
+export const SearchDriveClientFilesResponse = zod.object({
+  files: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      mimeType: zod.string(),
+      size: zod.string().nullish(),
+      modifiedTime: zod.string().nullish(),
+      webViewLink: zod.string().nullish(),
+    }),
+  ),
+});
+
+/**
+ * @summary Upload a file to a client subfolder
+ */
+export const UploadDriveFileParams = zod.object({
+  clientId: zod.coerce.number(),
+  folderId: zod.coerce.string(),
+});
+
+export const UploadDriveFileBody = zod.object({
+  file: zod.instanceof(File),
+});
+
+/**
  * @summary Chat with AI assistant about practice data
  */
 export const AiChatBody = zod.object({
